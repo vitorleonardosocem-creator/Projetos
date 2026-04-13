@@ -1,0 +1,110 @@
+projeto_acos/
+│
+├── app.py                 # Programa principal
+├── requirements.txt       # Bibliotecas necessárias
+├── config.py             # Configurações da base de dados
+├── templates/            # Páginas HTML
+│   ├── base.html         # Template base (menu comum)
+│   ├── index.html        # Dashboard principal
+│   ├── usuarios.html     # Gerir utilizadores
+│   ├── usuario_editar.html     # editar utilizadores
+│   ├── localizacoes.html # Gerir localizações
+│   ├── aco_criar.html    # Criar aço
+│   ├── aco_editar.html   # Editar aço
+│   ├── picking.html      # Picking para telemóveis
+│   └── procurar.html     # Procurar aços
+│   └── acos.html         #aços
+│   └── imprimir_localizacao.html     # imprimir_localizaçao
+
+
+
+
+├── static/
+│   ├── css/
+│   │   └── style.css     # Estilos
+│   ├── js/
+│   │   └── picking.js    # JavaScript para picking
+│   └── images/
+└── utils/
+    └── barcode.py        # Gerar códigos de barras
+
+
+
+
+Executa novamente: python app.py
+
+Abre: http://192.168.10.7:5000
+
+Login: admin@empresa.pt / admin123
+
+vitor.leonardo@socem.pt   123456
+
+
+No telemóvel, abre: http://192.168.10.7:5000/picking
+
+
+Próximo passo: Queres que adicione:
+
+Editar aços?*
+
+Procurar aços?*
+
+Gerar códigos de barras?*
+
+Gráficos no dashboard?*
+
+Editar utilizadores completo?*
+
+Melhorar Picking (câmara scanner)*
+
+
+
+quero é continuar  a desenvolver a aplicação. Pois ao analisar, reparei que podemos melhorar bastante. Melhorias:
+
+Ao criar o aço/Molde e imprimir o barcode associado, o barcode quero que seja substituido por um QRcode. Onde estara as informaçoes todas do aço. Neste caso, para de ser chamado aço e começa a ser chamado Molde;
+
+Quero poder criar peças que serão depois associados ao Molde;
+
+Tem de haver oportunidade de mover o Molde por localizaçoes. Neste caso, usasse um telemovel com picking para ler num campo o QRcode do Molde e outro campo para ler o barcode da Localizaçao. E assim carregar num botao "Enviar" para mudar a localizaçao;
+
+Na janela de historico de cada movimentaçao dos moldes as suas peças, tenho ter uma vista do molde e ao carregar num "+"(como arvore), apresentará as peças associadas. E ao carregar nas peças, consigo ver o historico de movimentações das peças. Como tambem me tem de deixar ver o historico de movimentaçoes do molde;
+
+Ajuda me a criar estas melhorias como tambem fazer mudanças a base de dados se for preciso. Envio em anexo as tabelas que tenho pois esquceste em cima de referir a tabela  dos utilizadores;
+
+Na nova tabela Moldes tem de haver o ID único, código QRcode, nome, localizacao_id, peca_id, observações, data_criacao, data_ultima_movimentacao, ativo (0,1), data movimento;
+Na nova tabela Peca, tem de haver ID único, código peca, nome, localizacao_id, observações, data_criacao, data_ultima_movimentacao, ativo (0,1), data movimento;
+
+O nome da peça sera sempre o nome do Molde, por exemplo ED26M4001 (Nome do Molde) - 100 (nome da peça) .... ED26M4001 - 100;
+Quando se cria a peça, tem de haver uma Dropbox com pesquisa, para associar a um Molde;
+
+Pode haver varias peças com o mesmo nome/numero mas sempre associados a cada Molde;
+
+Em questões do movimentos de peças, tem de haver os destinos:
+na tabela localização; 
+
+E na apresentação do menu de movimentos, tem de ter:
+Nome, Localização, data de movimento, hora de movimento
+
+Entendes as melhorias e mudanças que quero fazer?
+
+
+-----------------------------------------------------------------------
+
+Entendo perfeitamente o que queres fazer e faz todo o sentido: passarmos de “Aços” para “Moldes + Peças”, com QRCode, movimentos por telemóvel e histórico em árvore (Molde → Peças).
+
+Vou dividir em 4 blocos: alterações BD, modelo de dados (Molde/Peça/Histórico), fluxo de movimentos com QR + barcode, e histórico em árvore.
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+Próximos Passos Prioritários
+POST /mover_molde (move molde + peças auto)
+
+POST /mover_peca (histórico SQL)
+
+Validações (QR existe? Local válida?)
+
+Feedback (toast "Movido com sucesso!")
+
+Qual primeiro? Backend POST mover ou mais features?

@@ -1,0 +1,174 @@
+﻿{% extends "base.html" %}
+{% block title %}Lista Moldes{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h1><i class="fas fa-cubes me-2 text-primary"></i>Lista de Moldes</h1>
+        <a href="/molde/criar" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Novo Molde
+        </a>
+    </div>
+
+    <!-- FILTRO -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="GET">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Procurar moldes (ED26)..." value="{{ search }}">
+                    <button class="btn btn-primary">🔍 Filtrar</button>
+                    {% if search %}
+                    <a href="/moldes" class="btn btn-outline-secondary">❌ Limpar</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABELA -->
+    <div class="card shadow">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Peças Associadas Nome</th>
+                        <th>Localização</th>
+                        <th>#Peças</th>
+                        <th>Últ. Mov.</th>
+                        <th>QR</th>
+                        <th>Histórico</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for molde_id, nome, loc_nome, qr_codigo, num_pecas, ultima_mov in moldes %}
+                    <tr class="align-middle">
+                        <td>{{ molde_id }}</td>
+                        <td>
+                            {% if num_pecas > 0 %}
+                            <button class="btn btn-sm btn-outline-secondary expand-btn me-2"
+                                    onclick="togglePecas({{ molde_id }})" data-num-pecas="{{ num_pecas }}"  title="Expandir peças">
+                                <i class="fas fa-plus"></i> Peças ({{ num_pecas }})
+                            </button>
+                            {% endif %}
+                            <strong>{{ nome }}</strong>
+                        </td>
+                        <td><span class="badge bg-info">{{ loc_nome or 'Sem' }}</span></td>
+                        <td><span class="badge bg-primary">{{ num_pecas }}</span></td>
+                        <td>
+                            {% if ultima_mov %}
+                            {{ ultima_mov.strftime('%d/%m %H:%M') }}
+                            {% else %}
+                            Nunca
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if qr_codigo %}
+                            <a href="/imprimir_qr/molde/{{ molde_id }}" target="_blank"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-qrcode"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/historico/molde/{{ molde_id }}" class="btn btn-sm btn-info">
+                                <i class="fas fa-history"></i> Histórico
+                            </a>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="/molde/editar/{{ molde_id }}" class="btn btn-outline-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/molde/apagar/{{ molde_id }}" class="btn btn-outline-danger"
+                                   onclick="return confirm('Inativar molde {{ nome }}?\n{{ num_pecas }} peças associadas.');" title="Apagar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% if num_pecas > 0 %}
+                    <tr id="pecas-{{ molde_id }}" style="display: none;">
+                        <td colspan="8">
+                            <div class="pecas-container p-1 bg-light">
+                                
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePecas(moldeId) {
+        const rowId = 'pecas-' + moldeId;
+        const row = document.getElementById(rowId);
+        const btn = event.target.closest('button');
+
+       
+        const numPecas = btn.dataset.numPecas || '0';
+
+        if (row.style.display === 'none') {
+            row.querySelector('.pecas-container').innerHTML = '<div class="text-center p-2"><div class="spinner-border spinner-border-sm"></div></div>';
+            fetch('/api/moldes/' + moldeId + '/pecas')
+                .then(response => response.text())
+                .then(html => {
+                    row.querySelector('.pecas-container').innerHTML = html;
+                    row.style.display = 'table-row';
+                    btn.innerHTML = '<i class="fas fa-minus"></i> Fechar';
+                    btn.classList.replace('btn-outline-secondary', 'btn-outline-danger');
+                })
+                .catch(error => {
+                    row.querySelector('.pecas-container').innerHTML = '<div class="alert alert-danger p-1 small">Erro peças</div>';
+                });
+        } else {
+            row.style.display = 'none';
+            // ✅ RESTAURA número correto
+            btn.innerHTML = '<i class="fas fa-plus"></i> Peças (' + numPecas + ')';
+            btn.classList.replace('btn-outline-danger', 'btn-outline-secondary');
+        }
+    }
+</script>
+
+
+<style>
+    /* ULTRA COMPACTO ~20px */
+    .pecas-container {
+        padding: 0.25rem !important; /* container menor */
+    }
+
+        .pecas-container .card {
+            padding: 0.125rem 0.25rem !important; /* 2px */
+            margin-bottom: 0.125rem !important;
+            min-height: 20px !important; /* 20px total */
+        }
+
+        .pecas-container .card-body {
+            padding: 0.0625rem !important; /* 1px interno */
+            font-size: 0.7rem !important; /* 11px fonte */
+            line-height: 1 !important; /* sem espaço linhas */
+        }
+
+        .pecas-container .badge {
+            font-size: 0.6rem !important; /* badges minúsculos */
+            padding: 0.125rem 0.25rem !important;
+        }
+
+
+    .peca-compact {
+        margin-top: 4px !important;
+        margin-bottom: 0 !important;
+    }
+
+        .peca-compact .card {
+            margin-bottom: 0 !important;
+        }
+       
+
+</style>
+{% endblock %}

@@ -1,0 +1,124 @@
+﻿{% extends "base.html" %}
+{% block title %}Lista Peças{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h1><i class="fas fa-cogs me-2 text-success"></i>Lista de Peças</h1>
+        <a href="/peca/criar" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nova Peça
+        </a>
+    </div>
+
+    <!-- FILTRO (teu) -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="GET">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Procurar peças (2000, ED26)..." value="{{ search }}">
+                    <button class="btn btn-success">🔍 Filtrar</button>
+                    {% if search %}
+                    <a href="/pecas" class="btn btn-outline-secondary">❌ Limpar</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABELA (teu + AÇÕES) -->
+    <div class="card shadow">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-success">
+                    <tr>
+                        <th>ID</th>
+                        <th>
+                            <a href="?sort=codigo&dir={{ 'asc' if sort_col=='codigo' and sort_dir=='desc' else 'desc' }}{{'&search=' ~ search if search else '' }}" class="text-white">
+                                Código
+                                {% if sort_col=='codigo' %}{{ '↕️' if sort_dir=='desc' else '↖️' }}{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=moldes&dir={{ 'asc' if sort_col=='moldes' and sort_dir=='desc' else 'desc' }}{{'&search=' ~ search if search else '' }}" class="text-white">
+                                Molde
+                                {% if sort_col=='moldes' %}{{ '↕️' if sort_dir=='desc' else '↖️' }}{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=localizacao&dir={{ 'asc' if sort_col=='localizacao' and sort_dir=='desc' else 'desc' }}{{'&search=' ~ search if search else '' }}" class="text-white">
+                                Localização
+                                {% if sort_col=='localizacao' %}{{ '↕️' if sort_dir=='desc' else '↖️' }}{% endif %}
+                            </a>
+                        </th>
+                        <th>Últ. Mov.</th>
+                        <th>QR</th>
+                        <th>Ações</th>
+                        <th>Editar/Apagar</th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+                    {% for peca_id, codigo_peca, nome, molde_nome, localizacao, ultima_mov in pecas %}
+                    <tr class="align-middle">
+                        <td>{{ peca_id }}</td>
+                        <td><strong>{{ codigo_peca }}</strong></td>
+                        <td>{{ molde_nome }}</td>
+                        <td><span class="badge bg-info">{{ localizacao or 'Sem' }}</span></td>
+                        <td>
+                            {% if ultima_mov %}
+                            {{ ultima_mov.strftime('%d/%m %H:%M') }}
+                            {% else %}
+                            Nunca
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if nome %}
+                            <a href="/imprimir_qr/peca/{{ peca_id }}" target="_blank"
+                               class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-qrcode"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- Teus botões originais -->
+                            <div class="btn-group btn-group-sm">
+                                <a href="/historico/peca/{{ peca_id }}" class="btn btn-info">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                                <a href="/movimento/peca" class="btn btn-warning">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            <!-- ✅ AÇÕES NOVAS -->
+                            <div class="btn-group btn-group-sm">
+                                <a href="/peca/editar/{{ peca_id }}" class="btn btn-outline-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/peca/apagar/{{ peca_id }}" class="btn btn-outline-danger"
+                                   onclick="return confirm('Inativar peça {{ codigo_peca }}?');" title="Apagar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if not pecas %}
+    <div class="text-center py-5">
+        <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+        <h5>Nenhuma peça encontrada</h5>
+        {% if search %}
+        <p class="text-muted">Tenta outra pesquisa ou <a href="/peca/criar">cria a primeira</a>.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

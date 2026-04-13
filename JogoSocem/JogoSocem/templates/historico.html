@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📜 Histórico Anual - WorkScore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .sidebar { position:fixed; left:0; top:0; height:100vh; width:250px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); z-index:1000; }
+        .menu-item { padding:15px; cursor:pointer; color:white; transition:background 0.3s; border-left:4px solid transparent; }
+        .menu-item:hover { background:rgba(255,255,255,0.2); border-left-color:#fff; }
+        .content { margin-left:250px; padding:30px; min-height:100vh; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100">
+<div class="sidebar">
+    <h2 class="text-2xl font-bold p-6 text-white text-center">🎮 WorkScore</h2>
+    <div class="menu-item" onclick="location.href='/'">🏠 Dashboard</div>
+    <div class="menu-item" onclick="location.href='/departamentos'">🏢 Departamentos</div>
+    <div class="menu-item" onclick="location.href='/loja'">🛍️ Loja de Pontos</div>
+    <div class="menu-item" onclick="location.href='/historico'">📜 Histórico Anual</div>
+    <div class="menu-item" onclick="location.href='/admin-pontos'">⭐ Atribuir Pontos</div>
+    <div class="menu-item" onclick="location.href='/admin/reprocessar'">🔄 Reprocessar Sinex</div>
+    <div class="menu-item" onclick="location.href='/admin/relatorio'">📊 Relatório Mensal</div>
+    <div class="menu-item" onclick="location.href='/admin/loja'">⚙️ Admin Loja</div>
+    <div class="menu-item" onclick="location.href='/tv'">📺 Ecrã TV</div>
+</div>
+<div class="content">
+<div class="max-w-6xl mx-auto">
+
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">📜 Histórico Anual</h1>
+            <p class="text-gray-500 mt-1">Snapshot dos pontos e férias no final de cada ano.</p>
+        </div>
+        <a href="/fim_ano"
+           class="px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 font-semibold transition-all">
+            🔄 Reset Fim de Ano
+        </a>
+    </div>
+
+    {% if msg %}
+    <div class="mb-6 px-6 py-4 rounded-xl bg-green-100 text-green-700 border border-green-200 font-semibold">
+        ✅ {{ msg }}
+    </div>
+    {% endif %}
+
+    {% if not historico %}
+    <div class="bg-white rounded-2xl shadow p-12 text-center">
+        <div class="text-6xl mb-4">📭</div>
+        <h2 class="text-2xl font-bold text-gray-600 mb-2">Sem histórico ainda</h2>
+        <p class="text-gray-400">O histórico é criado automaticamente ao fazer o reset de fim de ano.</p>
+    </div>
+    {% else %}
+
+    <!-- Filtro por ano -->
+    {% if anos|length > 1 %}
+    <div class="bg-white rounded-2xl shadow border border-blue-100 p-4 mb-6 flex gap-2 flex-wrap">
+        <button onclick="filtrarAno('todos')"
+                id="btn-todos"
+                class="px-4 py-2 rounded-xl font-semibold text-sm bg-indigo-600 text-white transition-all">
+            Todos
+        </button>
+        {% for ano in anos %}
+        <button onclick="filtrarAno('{{ ano }}')"
+                id="btn-{{ ano }}"
+                class="px-4 py-2 rounded-xl font-semibold text-sm bg-gray-100 text-gray-600 hover:bg-indigo-100 transition-all">
+            {{ ano }}
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Tabela -->
+    <div class="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden">
+        <table class="w-full text-sm" id="tabela-historico">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-left">
+                    <th class="px-6 py-3 font-medium">Ano</th>
+                    <th class="px-6 py-3 font-medium">Colaborador</th>
+                    <th class="px-6 py-3 font-medium">Departamento</th>
+                    <th class="px-6 py-3 font-medium text-center">Pontos Finais</th>
+                    <th class="px-6 py-3 font-medium text-center">Férias Ganhas</th>
+                    <th class="px-6 py-3 font-medium text-center">Snapshot</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% set ns = namespace(ano_atual=0) %}
+                {% for h in historico %}
+                {% if h.ano != ns.ano_atual %}
+                    {% set ns.ano_atual = h.ano %}
+                    <tr class="ano-{{ h.ano }}">
+                        <td colspan="6" class="px-6 py-2 bg-indigo-50 text-indigo-700 font-bold text-sm uppercase tracking-wider">
+                            📅 Ano {{ h.ano }}
+                        </td>
+                    </tr>
+                {% endif %}
+                <tr class="hover:bg-gray-50 transition-colors ano-{{ h.ano }}">
+                    <td class="px-6 py-3 text-gray-400 font-mono text-xs">{{ h.ano }}</td>
+                    <td class="px-6 py-3 font-semibold text-gray-800">{{ h.nome }}</td>
+                    <td class="px-6 py-3 text-gray-500">{{ h.departamento }}</td>
+                    <td class="px-6 py-3 text-center">
+                        <span class="px-3 py-1 rounded-full font-bold text-sm
+                            {{ 'bg-green-100 text-green-700' if h.pontos_total >= 10 else 'bg-gray-100 text-gray-600' }}">
+                            {{ h.pontos_total }}
+                            {% if h.pontos_total >= 10 %}✅{% endif %}
+                        </span>
+                    </td>
+                    <td class="px-6 py-3 text-center">
+                        {% if h.ferias_ganhas > 0 %}
+                        <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full font-bold text-sm">
+                            🏖️ {{ h.ferias_ganhas }}
+                        </span>
+                        {% else %}
+                        <span class="text-gray-300">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-3 text-center text-gray-400 text-xs">{{ h.data_snapshot }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+<script>
+function filtrarAno(ano) {
+    document.querySelectorAll('[class*="ano-"]').forEach(el => {
+        if (ano === 'todos') {
+            el.style.display = '';
+        } else {
+            el.style.display = el.classList.contains('ano-' + ano) ? '' : 'none';
+        }
+    });
+    document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-600');
+    });
+    const active = document.getElementById('btn-' + ano);
+    if (active) {
+        active.classList.add('bg-indigo-600', 'text-white');
+        active.classList.remove('bg-gray-100', 'text-gray-600');
+    }
+}
+</script>
+</body>
+</html>

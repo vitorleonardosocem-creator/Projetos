@@ -1,0 +1,115 @@
+﻿{% extends "base.html" %}
+{% block title %}Histórico {{ nome_molde }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-history me-2 text-info"></i>Histórico Molde: <strong>{{ nome_molde }}</strong></h1>
+        <div>
+            <a href="/moldes" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-list me-2"></i>Moldes
+            </a>
+            <a href="/movimento/molde" class="btn btn-warning">
+                <i class="fas fa-exchange-alt me-2"></i>Mover
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- 📊 INFORMAÇÕES ATUAIS -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Estado Atual</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Localização:</strong> {{ loc_atual or 'Sem localização' }}
+                        </div>
+                        {% if qr_codigo %}
+                        <div class="col-md-6">
+                            <a href="/imprimir_qr/molde/{{ qr_codigo.split('_')[-1] }}"
+                               target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-print"></i> QR Molde
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 📈 HISTÓRICO MOVIMENTAÇÕES -->
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Movimentações ({{ historico|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if historico %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>De</th>
+                                    <th>→</th>
+                                    <th>Para</th>
+                                    <th>Utilizador</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mov in historico %}
+                                <tr>
+                                    <td>{{ mov[0] }}</td>
+                                    <td>{{ mov[1] or 'Criação' }}</td>
+                                    <td><i class="fas fa-arrow-right text-warning"></i></td>
+                                    <td><strong>{{ mov[2] }}</strong></td>
+                                    <td>{{ mov[3] or 'Sistema' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <h5>Nenhuma movimentação ainda</h5>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- 🔗 PEÇAS DO MOLDE -->
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-cubes me-2"></i>Peças ({{ pecas|length }})</h6>
+                </div>
+                <div class="card-body p-2">
+                    {% for p in pecas %}
+                    <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                        <div>
+                            <strong>{{ p[1] }}</strong><br>
+                            <small class="text-muted">{{ p[2] }}</small>
+                        </div>
+                        <div>
+                            {% if p[3] %}
+                            <a href="/imprimir_qr/peca/{{ p[0] }}"
+                               class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-print"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not pecas %}
+                    <div class="text-center py-3 text-muted">
+                        <small>Nenhuma peça</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

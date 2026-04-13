@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📊 Relatório Mensal - WorkScore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .sidebar { position:fixed; left:0; top:0; height:100vh; width:250px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); z-index:1000; }
+        .menu-item { padding:15px; cursor:pointer; color:white; transition:background 0.3s; border-left:4px solid transparent; }
+        .menu-item:hover { background:rgba(255,255,255,0.2); border-left-color:#fff; }
+        .content { margin-left:250px; padding:30px; min-height:100vh; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100">
+<div class="sidebar">
+    <h2 class="text-2xl font-bold p-6 text-white text-center">🎮 WorkScore</h2>
+    <div class="menu-item" onclick="location.href='/'">🏠 Dashboard</div>
+    <div class="menu-item" onclick="location.href='/departamentos'">🏢 Departamentos</div>
+    <div class="menu-item" onclick="location.href='/loja'">🛍️ Loja de Pontos</div>
+    <div class="menu-item" onclick="location.href='/historico'">📜 Histórico Anual</div>
+    <div class="menu-item" onclick="location.href='/admin-pontos'">⭐ Atribuir Pontos</div>
+    <div class="menu-item" onclick="location.href='/admin/reprocessar'">🔄 Reprocessar Sinex</div>
+    <div class="menu-item" onclick="location.href='/admin/relatorio'">📊 Relatório Mensal</div>
+    <div class="menu-item" onclick="location.href='/admin/loja'">⚙️ Admin Loja</div>
+    <div class="menu-item" onclick="location.href='/tv'">📺 Ecrã TV</div>
+</div>
+<div class="content">
+<div class="max-w-6xl mx-auto">
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">📊 Relatório Mensal</h1>
+        <p class="text-gray-500 mt-1">Análise de pontos por mês com base nos registos do Sinex.</p>
+    </div>
+
+    <!-- Formulário -->
+    <div class="bg-white rounded-2xl shadow-xl border border-blue-100 p-8 mb-8">
+        <form method="POST" action="/admin/relatorio" class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Mês</label>
+                <select name="mes" class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-800">
+                    {% set meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'] %}
+                    {% for i in range(1, 13) %}
+                    <option value="{{ i }}" {{ 'selected' if i == mes_default }}>{{ meses[i-1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ano</label>
+                <select name="ano" class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-800">
+                    {% for y in range(ano_default, ano_default - 4, -1) %}
+                    <option value="{{ y }}" {{ 'selected' if y == ano_default }}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit"
+                    class="px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-all">
+                Ver Relatório
+            </button>
+            {% if resultado and not resultado.get('erro') %}
+            <form method="POST" action="/admin/relatorio/exportar" class="inline">
+                <input type="hidden" name="mes" value="{{ mes_default }}">
+                <input type="hidden" name="ano" value="{{ ano_default }}">
+                <button type="submit"
+                        class="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-semibold transition-all">
+                    ⬇️ Exportar Excel
+                </button>
+            </form>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if resultado %}
+        {% if resultado.get('erro') %}
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-6">
+            <p class="text-red-700 font-semibold">❌ {{ resultado.erro }}</p>
+        </div>
+        {% else %}
+
+        {% set meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'] %}
+        <h2 class="text-2xl font-bold text-gray-700 mb-6">
+            {{ meses[resultado.mes - 1] }} {{ resultado.ano }}
+        </h2>
+
+        <!-- Destaques -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-xl border border-blue-100 p-6 text-center">
+                <div class="text-4xl mb-2">👥</div>
+                <div class="text-3xl font-black text-indigo-600">{{ resultado.total_colaboradores }}</div>
+                <div class="text-gray-500 mt-1">Colaboradores com registo</div>
+            </div>
+            {% if resultado.melhor %}
+            <div class="bg-white rounded-2xl shadow-xl border border-yellow-200 p-6 text-center">
+                <div class="text-4xl mb-2">🏆</div>
+                <div class="text-xl font-black text-gray-800">{{ resultado.melhor.nome }}</div>
+                <div class="text-3xl font-bold text-yellow-500 mt-1">{{ resultado.melhor.pontos_mes | int }} pts</div>
+                <div class="text-gray-500 text-sm mt-1">Mais pontos no mês</div>
+            </div>
+            {% endif %}
+            {% if resultado.mais_consistente %}
+            <div class="bg-white rounded-2xl shadow-xl border border-green-200 p-6 text-center">
+                <div class="text-4xl mb-2">🎯</div>
+                <div class="text-xl font-black text-gray-800">{{ resultado.mais_consistente.nome }}</div>
+                <div class="text-3xl font-bold text-green-500 mt-1">{{ resultado.mais_consistente.dias_positivos | int }} dias</div>
+                <div class="text-gray-500 text-sm mt-1">Mais dias com +1</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Stats por departamento -->
+        {% if resultado.depts %}
+        <div class="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-700">🏢 Por Departamento</h3>
+            </div>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-left">
+                        <th class="px-6 py-3 font-medium">Departamento</th>
+                        <th class="px-6 py-3 font-medium text-center">Colaboradores</th>
+                        <th class="px-6 py-3 font-medium text-center">Total Pontos</th>
+                        <th class="px-6 py-3 font-medium text-center">Média por Dia</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for d in resultado.depts %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-3 font-semibold text-gray-800">{{ d.departamento }}</td>
+                        <td class="px-6 py-3 text-center text-gray-600">{{ d.total_users | int }}</td>
+                        <td class="px-6 py-3 text-center font-bold
+                            {{ 'text-green-600' if d.total_pontos > 0 else 'text-red-500' if d.total_pontos < 0 else 'text-gray-400' }}">
+                            {{ '%+d' % d.total_pontos | int }}
+                        </td>
+                        <td class="px-6 py-3 text-center text-indigo-600">
+                            {{ '%.1f'|format(d.media_pontos) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Tabela colaboradores -->
+        <div class="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-700">👤 Detalhe por Colaborador</h3>
+                <span class="text-sm text-gray-400">{{ resultado.total_colaboradores }} registos</span>
+            </div>
+            <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-left">
+                        <th class="px-6 py-3 font-medium">#</th>
+                        <th class="px-6 py-3 font-medium">Colaborador</th>
+                        <th class="px-6 py-3 font-medium">Departamento</th>
+                        <th class="px-6 py-3 font-medium text-center">Pontos Mês</th>
+                        <th class="px-6 py-3 font-medium text-center">Dias +1</th>
+                        <th class="px-6 py-3 font-medium text-center">Dias -1</th>
+                        <th class="px-6 py-3 font-medium text-center">Total Dias</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for c in resultado.colaboradores %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-3 text-gray-400 font-mono">{{ loop.index }}</td>
+                        <td class="px-6 py-3 font-semibold text-gray-800">{{ c.nome }}</td>
+                        <td class="px-6 py-3 text-gray-500">{{ c.departamento }}</td>
+                        <td class="px-6 py-3 text-center font-bold text-lg
+                            {{ 'text-green-600' if c.pontos_mes > 0 else 'text-red-500' if c.pontos_mes < 0 else 'text-gray-400' }}">
+                            {{ '%+d' % c.pontos_mes | int }}
+                        </td>
+                        <td class="px-6 py-3 text-center text-green-600 font-semibold">{{ c.dias_positivos | int }}</td>
+                        <td class="px-6 py-3 text-center text-red-500 font-semibold">{{ c.dias_negativos | int }}</td>
+                        <td class="px-6 py-3 text-center text-gray-500">{{ c.total_registos | int }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        {% endif %}
+    {% endif %}
+
+</div>
+</div>
+</body>
+</html>

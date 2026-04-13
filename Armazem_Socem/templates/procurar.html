@@ -1,0 +1,98 @@
+﻿{% extends "base.html" %}
+{% block title %}🔍 Procurar{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">🔍 Procurar Moldes e Peças</h1>
+        <a href="/" class="btn btn-outline-primary">🏠 Dashboard</a>
+    </div>
+
+    <!-- Formulário -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="GET" action="/procurar/resultados">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text">🔤</span>
+                            <input type="text" class="form-control" name="termo"
+                                   placeholder="Nome/código (ED26M4004, PECA123)..." value="{{ termo or '' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" name="localizacao">
+                            <option value="">Todas localizações</option>
+                            {% for loc in localizacoes %}
+                            <option value="{{ loc[0] }}" {% if localizacao == loc[0]|string %}selected{% endif %}>
+                                {{ loc[1] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>Procurar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    {% if resultados %}
+    <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>📋 {{ resultados|length }} resultado(s)</h5>
+            {% if termo or localizacao %}
+            <a href="/procurar" class="btn btn-sm btn-outline-secondary">🔄 Nova Pesquisa</a>
+            {% endif %}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Molde</th>
+                        <th>Localização</th>
+                        <th>Últ. Mov.</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in resultados %}
+                    <tr>
+                        <td>
+                            <span class="badge {{ 'bg-primary' if item.tipo == 'molde' else 'bg-info' }}">
+                                {{ item.tipo }}
+                            </span>
+                        </td>
+                        <td><strong>{{ item.codigo }}</strong></td>
+                        <td>{{ item.nome }}</td>
+                        <td>{{ item.molde_nome or '-' }}</td>
+                        <td><span class="badge bg-light text-dark">{{ item.localizacao }}</span></td>
+                        <td>{{ item.ultima_mov or '-' }}</td>
+                        <td>
+                            <a href="{{ '/historico/molde/' if item.tipo == 'molde' else '/historico/peca/' }}{{ item.id }}"
+                               class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-history"></i>
+                            </a>
+                            <a href="{{ '/movimento/molde' if item.tipo == 'molde' else '/movimento/peca' }}"
+                               class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-exchange-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

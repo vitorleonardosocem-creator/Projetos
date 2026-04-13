@@ -1,0 +1,240 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>👤 Gestão Utilizadores - WorkScore</title>
+    <style>
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success: #10b981;
+            --danger: #ef4444;
+            --glass: rgba(255,255,255,0.1);
+            --shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            padding: 2rem 0;
+        }
+
+            .sidebar h2 {
+                text-align: center;
+                color: #333;
+                margin: 0 0 2rem;
+            }
+
+        .menu-item {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            margin-bottom: 0.5rem;
+        }
+
+            .menu-item:hover {
+                background: var(--glass);
+                border-left-color: #667eea;
+                transform: translateX(10px);
+            }
+
+        .main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .create-form {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            color: white;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.9);
+        }
+
+        .btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+            .btn:hover {
+                background: #059669;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(16,185,129,0.4);
+            }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .user-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-dept {
+            color: #10b981;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .back {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            display: inline-block;
+            margin-top: 2rem;
+        }
+
+        .alert {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .alert-success {
+            background: rgba(16,185,129,0.2);
+            color: white;
+            border: 1px solid #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>⚙️ Admin WorkScore</h2>
+            <div class="menu-item" onclick="location.href='/'">📊 Dashboard</div>
+            <div class="menu-item" onclick="location.href='/admin-departamentos'">🏢 Departamentos</div>
+            <div class="menu-item" onclick="location.href='/admin-users'">👤 Utilizadores</div>
+        </div>
+        <div class="main">
+            <h1>👤 Gestão Utilizadores</h1>
+
+            {% if request.query_params.msg %}
+            <div class="alert alert-success">{{ request.query_params.msg }}</div>
+            {% endif %}
+
+            <!-- Form Criar User -->
+            <div class="create-form">
+                <h3 style="color: white; margin-bottom: 1.5rem;">➕ Criar Novo Utilizador</h3>
+                <form method="POST" action="/admin-users">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo:</label>
+                            <input type="text" name="nome" required placeholder="Ex: João Silva">
+                        </div>
+                        <div class="form-group">
+                            <label>Departamento:</label>
+                            <select name="departamento_id" required>
+                                <option value="">Selecione...</option>
+                                {% for dept in departamentos %}
+                                <option value="{{ dept.id }}">{{ dept.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">✅ Criar Utilizador</button>
+                </form>
+            </div>
+
+            <!-- Lista Users -->
+            <h3 style="color: white;">📋 Utilizadores Existentes ({{ total_users }})</h3>
+            <div class="users-grid">
+                {% for user in users %}
+                <div class="user-card">
+                    <div class="user-name">{{ user.nome }}</div>
+                    <div class="user-dept">
+                        🏢 {{ user.departamento_nome or 'Sem departamento' }}
+                        {% if user.pontos_total %}⭐ {{ user.pontos_total }} pts{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <a href="/" class="back">⬅ Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

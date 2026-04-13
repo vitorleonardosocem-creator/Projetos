@@ -1,0 +1,201 @@
+﻿{% extends "base.html" %}
+{% block title %}Supplier Registration - SOCEM{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <img src="/static/imagens/socem.jpg" alt="SOCEM" class="img-fluid mb-2" style="max-height: 80px;" onerror="this.style.display='none'">
+                    <h2 class="mb-0">{{ textos.supplier_registration }}</h2>
+                    <p class="mb-0 opacity-75">{{ textos.fill_supplier }}</p>
+                </div>
+                <div class="card-body p-5">
+				<style>
+.card-header.bg-primary {
+    background-color: #E01F26 !important;
+    border-color: #E01F26 !important;
+}
+
+.btn-primary {
+    background-color: #E01F26 !important;
+    border-color: #E01F26 !important;
+    color: #ffffff !important;
+}
+
+.btn-primary:hover {
+    background-color: #c91920 !important;
+    border-color: #c91920 !important;
+    color: #ffffff !important;
+}
+
+.btn-outline-secondary {
+    color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    color: #ffffff !important;
+    border-color: #6c757d !important;
+}
+</style>
+
+                    <form id="fornecedorForm">
+                        <div class="mb-4">
+                            <label for="txtName" class="form-label fw-bold">
+                                {{ textos.name }} <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control form-control-lg" id="txtName" list="nomesFornecedores" placeholder="" autocomplete="off" required>
+                            <datalist id="nomesFornecedores"></datalist>
+                            <div class="form-text">{{ textos.suggestions }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="txtEmpresa" class="form-label fw-bold">{{ textos.company }}</label>
+                                <input type="text" class="form-control form-control-lg" id="txtEmpresa" placeholder="">
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="txtPhone" class="form-label fw-bold">{{ textos.phone }}</label>
+                                <input type="tel" class="form-control form-control-lg" id="txtPhone" placeholder="">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="txtEmail" class="form-label fw-bold">{{ textos.email }}</label>
+                                <input type="email" class="form-control form-control-lg" id="txtEmail" placeholder={{textos.email_exemplo}}>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="txtResponsavel" class="form-label fw-bold">{{ textos.contact_person }}</label>
+                                <select class="form-control form-control-lg" id="txtResponsavel">
+                                    <option value="">{{textos.selecionar_responsavel}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold py-3">🚀 {{ textos.register_supplier_btn }}</button>
+                        </div>
+                        <!-- NOVO BOTÃO VOLTAR -->
+                        <a href="/fornecedores" class="btn btn-outline-secondary w-100 py-3 fs-5 fw-bold mt-2">
+                            {{ textos.back }}
+                        </a>
+                    </form>
+                    <div id="message" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    // Carregar responsáveis da base de dados
+    fetch('/api/responsaveis')
+        .then(r => r.json())
+        .then(lista => {
+            const select = document.getElementById('txtResponsavel');
+
+            lista.forEach(nome => {
+                const option = document.createElement('option');
+                option.value = nome;
+                option.textContent = nome;
+                select.appendChild(option);
+            });
+
+            console.log("✅ Responsáveis carregados:", lista);
+        })
+        .catch(err => console.error("Erro responsáveis:", err));
+
+
+    let nomesFornecedores = [];
+    const form = document.getElementById('fornecedorForm');
+    const nomeInput = document.getElementById('txtName');
+    const datalist = document.getElementById('nomesFornecedores');
+    const btn = form.querySelector('button[type="submit"]');
+
+    // Carrega nomes Fornecedores
+    fetch('/api/nomes/fornecedores')
+        .then(r => r.json())
+        .then(nomes => {
+            nomesFornecedores = nomes;
+            nomes.forEach(nome => {
+                const option = document.createElement('option');
+                option.value = nome;
+                datalist.appendChild(option);
+            });
+            console.log(`✅ Fornecedores carregados: ${nomes.length}`);
+        })
+        .catch(err => console.error('Erro nomes:', err));
+
+    // Auto-preenche ao selecionar nome
+    nomeInput.addEventListener('input', debounce(async (e) => {
+        const nome = e.target.value;
+        if (nome.length < 2) return;
+
+        const registo = await fetch(`/api/carregar_fornecedor?nome=${encodeURIComponent(nome)}`)
+            .then(r => r.json())
+            .catch(() => ({}));
+
+        if (registo.empresa) {
+            document.getElementById('txtEmpresa').value = registo.empresa;
+            document.getElementById('txtPhone').value = registo.telefone || '';
+            document.getElementById('txtEmail').value = registo.email || '';
+            // ← Responsavel FICA VAZIO (manual)!
+        }
+    }, 300));
+
+    function debounce(fn, delay) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn(...args), delay);
+        };
+    }
+
+    function showMessage(msg, type = 'success') {
+        const div = document.getElementById('message');
+        div.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    }
+
+    function setLoading(loading) {
+        btn.disabled = loading;
+        btn.innerHTML = loading ? '⏳ A registar...' : '🚀 Registar Fornecedor';
+    }
+
+    // Submit - VERSÃO FINAL CORRECTA
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const formData = new FormData();
+        formData.append('nome', document.getElementById('txtName').value);
+        formData.append('empresa', document.getElementById('txtEmpresa').value);
+        formData.append('telefone', document.getElementById('txtPhone').value);
+        formData.append('email', document.getElementById('txtEmail').value);
+        formData.append('responsavel', document.getElementById('txtResponsavel').value);
+
+        try {
+            const resp = await fetch('/api/registar_fornecedores', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await resp.json();
+
+            if (resp.ok) {
+                showMessage(result.message || '✅ Registado!', 'success');
+                setTimeout(() => window.location.href = '/fornecedores', 1500);
+            } else {
+                showMessage(result.detail || 'Erro!', 'danger');
+            }
+        } catch (err) {
+            console.error(err);
+            showMessage('Erro de rede!', 'danger');
+        } finally {
+            setLoading(false);
+        }
+    });
+
+
+</script>
+{% endblock %}

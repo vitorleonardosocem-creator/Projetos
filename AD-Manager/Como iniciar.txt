@@ -1,0 +1,3 @@
+Iniciar o BAT Serve
+
+Inciciar o INICIAR_NGINX

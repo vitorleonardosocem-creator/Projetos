@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendário de Almoços</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
+      padding: 24px 16px;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      max-width: 900px;
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon { font-size: 34px; }
+
+    .brand h1 {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .btn-logout {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-logout:hover { background: rgba(255,255,255,0.14); }
+
+    /* ── Calendar card ───────────────────────────────────────── */
+    .cal-card {
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    }
+
+    /* ── Month navigation ────────────────────────────────────── */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .nav-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-btn:hover { background: rgba(255,255,255,0.16); }
+
+    .nav-center { text-align: center; }
+
+    .nav-month {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-year {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+    }
+
+    /* ── Today button ────────────────────────────────────────── */
+    .btn-today {
+      background: rgba(233,69,96,0.2);
+      border: 1px solid rgba(233,69,96,0.4);
+      color: #ff8a9a;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-today:hover { background: rgba(233,69,96,0.35); }
+
+    /* ── Day-of-week header ──────────────────────────────────── */
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .cal-weekdays span {
+      text-align: center;
+      padding: 12px 0;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .cal-weekdays span.weekend { color: rgba(233,69,96,0.7); }
+
+    /* ── Grid ────────────────────────────────────────────────── */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .cal-day {
+      background: rgba(15,20,50,0.6);
+      min-height: 90px;
+      padding: 10px;
+      position: relative;
+      transition: background 0.15s;
+    }
+
+    .cal-day.empty { background: rgba(10,14,35,0.4); cursor: default; }
+
+    .cal-day.has-almocos {
+      cursor: pointer;
+    }
+
+    .cal-day.has-almocos:hover {
+      background: rgba(233,69,96,0.12);
+    }
+
+    .cal-day.is-today .day-num {
+      background: #e94560;
+      color: #fff;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cal-day.is-weekend .day-num { color: rgba(233,69,96,0.8); }
+
+    .day-num {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+    }
+
+    /* ── Lunch badge ─────────────────────────────────────────── */
+    .lunch-badge {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, #e94560, #c0392b);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(233,69,96,0.4);
+    }
+
+    .lunch-badge .lbl {
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0.85;
+    }
+
+    /* ── Loading spinner ─────────────────────────────────────── */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+      grid-column: span 7;
+    }
+
+    /* ── Summary bar ─────────────────────────────────────────── */
+    .cal-footer {
+      padding: 16px 28px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .stat strong { color: #fff; font-size: 20px; }
+
+    /* ── Modal ───────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #16213e;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 540px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      animation: slideUp 0.2s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-sub   { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+
+    .modal-close {
+      background: rgba(255,255,255,0.08);
+      border: none;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .modal-close:hover { background: rgba(255,255,255,0.16); }
+
+    .modal-body {
+      overflow-y: auto;
+      padding: 16px 24px 24px;
+      flex: 1;
+    }
+
+    /* ── Table inside modal ──────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.4);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+    tbody td {
+      padding: 11px 12px;
+      color: rgba(255,255,255,0.85);
+      vertical-align: middle;
+    }
+
+    tbody td:first-child { font-weight: 600; }
+
+    .empresa-tag {
+      background: rgba(255,255,255,0.08);
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 12px;
+    }
+
+    .resp-tag {
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+    }
+
+    .tipo-Cliente {
+      background: rgba(52, 152, 219, 0.2);
+      border: 1px solid rgba(52, 152, 219, 0.4);
+      color: #74b9ff;
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .tipo-fornecedor {
+      background: rgba(46, 213, 115, 0.2);
+      border: 1px solid rgba(46, 213, 115, 0.4);
+      color: #55efc4;
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .error-msg {
+      color: #ff8a9a;
+      text-align: center;
+      padding: 24px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🍽️</div>
+      <div>
+        <h1>Calendário de Almoços</h1>
+        <p>Visitantes com almoço confirmado</p>
+      </div>
+    </div>
+    <a href="/logout" class="btn-logout">Sair ↩</a>
+  </header>
+
+  <div class="cal-card">
+
+    <!-- Navigation -->
+    <div class="cal-nav">
+      <button class="nav-btn" id="btnPrev">&#8249;</button>
+      <div class="nav-center">
+        <div class="nav-month" id="navMonth"></div>
+        <div class="nav-year"  id="navYear"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-today" id="btnToday">Hoje</button>
+        <button class="nav-btn" id="btnNext">&#8250;</button>
+      </div>
+    </div>
+
+    <!-- Weekday labels -->
+    <div class="cal-weekdays">
+      <span>Dom</span><span>Seg</span><span>Ter</span>
+      <span>Qua</span><span>Qui</span><span>Sex</span>
+      <span class="weekend">Sáb</span>
+    </div>
+
+    <!-- Day grid -->
+    <div class="cal-grid" id="calGrid">
+      <div class="loading">A carregar...</div>
+    </div>
+
+    <!-- Footer summary -->
+    <div class="cal-footer">
+      <div class="stat">
+        <strong id="statTotal">–</strong> almoços neste mês
+      </div>
+      <div class="stat">
+        <strong id="statDias">–</strong> dias com almoço
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modalTitle"></div>
+          <div class="modal-sub"  id="modalSub"></div>
+        </div>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const MONTHS_PT = [
+      'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+      'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+    ];
+
+    const WEEKDAYS_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+    let currentYear  = {{ year }};
+    let currentMonth = {{ month }};
+    let lunchData    = {};
+
+    // ── Render calendar ──────────────────────────────────────────
+    async function renderCalendar() {
+      document.getElementById('navMonth').textContent = MONTHS_PT[currentMonth - 1];
+      document.getElementById('navYear').textContent  = currentYear;
+
+      const grid = document.getElementById('calGrid');
+      grid.innerHTML = '<div class="loading">A carregar dados...</div>';
+
+      lunchData = await fetchLunchData(currentYear, currentMonth);
+
+      const today   = new Date();
+      const isToday = (d) =>
+        today.getFullYear() === currentYear &&
+        today.getMonth() + 1 === currentMonth &&
+        today.getDate() === d;
+
+      // Day of week of the 1st (0=Sun … 6=Sat)
+      const firstDow   = new Date(currentYear, currentMonth - 1, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+      grid.innerHTML = '';
+
+      // Empty leading cells
+      for (let i = 0; i < firstDow; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-day empty';
+        grid.appendChild(cell);
+      }
+
+      let totalAlmocos = 0;
+      let diasComAlmoco = 0;
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const cell  = document.createElement('div');
+        cell.className = 'cal-day';
+
+        const dow = (firstDow + d - 1) % 7;
+        if (dow === 0 || dow === 6) cell.classList.add('is-weekend');
+        if (isToday(d))             cell.classList.add('is-today');
+
+        // Date key
+        const dateStr = `${currentYear}-${String(currentMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const count   = lunchData[dateStr] || 0;
+
+        if (count > 0) {
+          cell.classList.add('has-almocos');
+          totalAlmocos += count;
+          diasComAlmoco++;
+          cell.addEventListener('click', () => openModal(dateStr, d, count));
+        }
+
+        // Day number
+        const numEl = document.createElement('div');
+        numEl.className = 'day-num';
+        numEl.textContent = d;
+        cell.appendChild(numEl);
+
+        // Lunch badge
+        if (count > 0) {
+          const badge = document.createElement('div');
+          badge.className = 'lunch-badge';
+          badge.innerHTML = `🍽️ <strong>${count}</strong> <span class="lbl">${count === 1 ? 'almoço' : 'almoços'}</span>`;
+          cell.appendChild(badge);
+        }
+
+        grid.appendChild(cell);
+      }
+
+      // Summary
+      document.getElementById('statTotal').textContent = totalAlmocos;
+      document.getElementById('statDias').textContent  = diasComAlmoco;
+    }
+
+    // ── Fetch month data from API ─────────────────────────────────
+    async function fetchLunchData(year, month) {
+      try {
+        const res  = await fetch(`/api/almocos?year=${year}&month=${month}`);
+        const data = await res.json();
+        if (data.error) { console.error(data.error); return {}; }
+        return data;
+      } catch (e) {
+        console.error(e);
+        return {};
+      }
+    }
+
+    // ── Modal ─────────────────────────────────────────────────────
+    async function openModal(dateStr, day, count) {
+      const overlay = document.getElementById('modalOverlay');
+      const body    = document.getElementById('modalBody');
+      const title   = document.getElementById('modalTitle');
+      const sub     = document.getElementById('modalSub');
+
+      // Format date in Portuguese
+      const [y, m, d] = dateStr.split('-');
+      title.textContent = `${parseInt(d)} de ${MONTHS_PT[parseInt(m)-1]} de ${y}`;
+      sub.textContent   = `${count} ${count === 1 ? 'pessoa' : 'pessoas'} a almoçar`;
+
+      body.innerHTML = '<div class="loading">A carregar...</div>';
+      overlay.classList.add('open');
+
+      try {
+        const res  = await fetch(`/api/dia/${dateStr}`);
+        const data = await res.json();
+
+        if (data.error) {
+          body.innerHTML = `<div class="error-msg">Erro: ${data.error}</div>`;
+          return;
+        }
+
+        if (data.length === 0) {
+          body.innerHTML = '<div class="error-msg">Sem registos encontrados.</div>';
+          return;
+        }
+
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Empresa</th>
+                <th>Responsável</th>
+                <th>Tipo</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+        data.forEach(r => {
+          const tipoClass = r.tipo === 'Fornecedor' ? 'tipo-fornecedor' : 'tipo-Cliente';
+          html += `
+              <tr>
+                <td>${escHtml(r.nome)}</td>
+                <td><span class="empresa-tag">${escHtml(r.empresa)}</span></td>
+                <td class="resp-tag">${escHtml(r.responsavel)}</td>
+                <td><span class="${tipoClass}">${escHtml(r.tipo)}</span></td>
+              </tr>`;
+        });
+
+        html += '</tbody></table>';
+        body.innerHTML = html;
+
+      } catch (e) {
+        body.innerHTML = `<div class="error-msg">Erro de ligação.</div>`;
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function escHtml(str) {
+      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── Navigation ────────────────────────────────────────────────
+    document.getElementById('btnPrev').addEventListener('click', () => {
+      currentMonth--;
+      if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+      renderCalendar();
+    });
+
+    document.getElementById('btnNext').addEventListener('click', () => {
+      currentMonth++;
+      if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+      renderCalendar();
+    });
+
+    document.getElementById('btnToday').addEventListener('click', () => {
+      const t = new Date();
+      currentYear  = t.getFullYear();
+      currentMonth = t.getMonth() + 1;
+      renderCalendar();
+    });
+
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modalOverlay')) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ── Init ──────────────────────────────────────────────────────
+    renderCalendar();
+  </script>
+</body>
+</html>

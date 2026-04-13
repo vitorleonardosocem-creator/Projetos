@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Utilizador - GSMed</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 15px;
+        }
+
+        .btn {
+            border-radius: 25px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-success text-white text-center py-4">
+                        <h2 class="mb-0"><i class="fas fa-user-edit me-3"></i>Editar Utilizador</h2>
+                    </div>
+
+                    <div class="card-body p-4">
+                        {% if user %}
+                        <div class="mb-4 p-3 bg-light rounded">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6><i class="fas fa-user-circle text-primary me-2"></i>{{ user_nome }} ({{ user }})</h6>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <a href="/utilizadores" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <form method="post" action="/utilizadores/editar/{{ user_data.IdUser }}">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Username</label>
+                                    <input type="text" class="form-control" value="{{ user_data.Username }}" disabled>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Role Atual</label>
+                                    <input type="text" class="form-control" value="{{ user_data.RoleNome }}" disabled>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Nome Completo *</label>
+                                    <input type="text" name="nome_completo" class="form-control"
+                                           value="{{ user_data.NomeCompleto or '' }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Email</label>
+                                    <input type="email" name="email" class="form-control"
+                                           value="{{ user_data.Email or '' }}" placeholder="opcional@exemplo.com">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-bold">Nova Role *</label>
+                                    <select name="id_role" class="form-select" required>
+                                        {% for role in all_roles %}
+                                        <option value="{{ role.IdRole }}"
+                                                {% if role.IdRole==user_data.IdRole %}selected{% endif %}>
+                                            {{ role.Nome }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-bold">Estado</label>
+                                    <select name="ativo" class="form-select">
+                                        <option value="1" {% if user_data.Ativo %}selected{% endif %}>🟢 Ativo</option>
+                                        <option value="0" {% if not user_data.Ativo %}selected{% endif %}>🔴 Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 🆕 MUDANÇA DE PASSWORD -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card border-0 shadow-sm p-3 bg-light rounded">
+                                        <h6 class="fw-bold text-primary mb-3">
+                                            <i class="fas fa-key me-2"></i>Mudar Password (opcional)
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label fw-semibold small">Nova Password</label>
+                                                <input type="password" name="new_password" class="form-control"
+                                                       placeholder="Deixar vazio = manter atual">
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label fw-semibold small">Confirmar</label>
+                                                <input type="password" id="confirm_password" class="form-control"
+                                                       placeholder="Confirme a password">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-success btn-lg px-5">
+                                    <i class="fas fa-save me-2"></i>Guardar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validação passwords iguais
+        document.querySelector('form').addEventListener('submit', function (e) {
+            const pass1 = document.querySelector('input[name="new_password"]').value;
+            const pass2 = document.getElementById('confirm_password').value;
+            if (pass1 && pass1 !== pass2) {
+                e.preventDefault();
+                alert('❌ As passwords não coincidem!');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

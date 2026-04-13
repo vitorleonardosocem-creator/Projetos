@@ -1,0 +1,91 @@
+﻿{% extends "base.html" %}
+{% block title %}{{ molde[2] }} - Visualizar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">👁️ {{ molde[2] }}</h1>
+    <div class="btn-toolbar">
+        <a href="/moldes-finalizados" class="btn btn-sm btn-outline-secondary">← Finalizados</a>
+        <a href="/molde/editar/{{ molde[0] }}" class="btn btn-sm btn-outline-primary">✏️ Editar</a>
+    </div>
+</div>
+
+<!-- Card Dados Molde -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">📋 Dados do Molde</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><th>ID:</th><td><strong>{{ molde[0] }}</strong></td></tr>
+                    <tr><th>QR Code:</th><td><code>{{ molde[1] }}</code></td></tr>
+                    <tr><th>Nome:</th><td>{{ molde[2] }}</td></tr>
+                    <tr><th>Localização:</th><td><span class="badge badge-{{ 'success' if molde[5]=='Interno' else 'warning' }}">{{ molde[4] }}</span></td></tr>
+                    <tr><th>Estado:</th><td><span class="badge badge-{{ 'danger' if molde[9]=='Finalizado' else 'success' }}">{{ molde[9] }}</span></td></tr>
+                    <tr><th>Ativo:</th><td><span class="badge badge-{{ 'success' if molde[8]==1 else 'danger' }}">{{ 'Sim' if molde[8]==1 else 'Não' }}</span></td></tr>
+                    <tr><th>Criação:</th><td>{{ molde[7].strftime('%d/%m/%Y %H:%M') }}</td></tr>
+                    <tr><th>Últ. Mov:</th><td>{{ molde[8].strftime('%d/%m/%Y %H:%M') if molde[8] else '-' }}</td></tr>
+                </table>
+                <p><strong>Observações:</strong> {{ molde[6] or '—' }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-success">📦 Estatísticas</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="h3 mb-0">{{ total_pecas }}</div>
+                <div class="text-muted">Total Peças</div>
+                <div class="mt-3">
+                    <span class="badge badge-info">{{ total_pecas }} peças</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Peças do Molde -->
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-info">📋 Peças do Molde ({{ total_pecas }})</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <!-- Tabela Peças (thead) -->
+                <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Localização</th>
+                        <th>Tipo</th>
+                        <th>QR</th>
+                        <th>Ativo</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for peca in pecas %}
+                    <tr>
+                        <td>{{ peca[0] }}</td>
+                        <td><code>{{ peca[1] }}</code></td>
+                        <td>{{ peca[2] }}</td>
+                        <td>{{ peca[4] }}</td>
+                        <td><span class="badge badge-{{ 'success' if peca[5]=='Interno' else 'warning' }}">{{ peca[5] }}</span></td>
+                        <td><small>{{ peca[6] or '-' }}</small></td>
+                        <td><span class="badge badge-{{ 'success' if peca[7]==1 else 'danger' }}">{{ 'Sim' if peca[7]==1 else 'Não' }}</span></td>
+                        <td>{{ peca[8].strftime('%d/%m/%Y') if peca[8] else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

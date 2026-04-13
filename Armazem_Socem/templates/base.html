@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Sistema de Moldes - {% block title %}{% endblock %}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Sidebar moderna + compatível com teu dashboard */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            z-index: 1030;
+            overflow-y: auto;
+        }
+
+            .sidebar .nav-link {
+                color: rgba(255,255,255,0.8);
+                padding: 12px 20px;
+                border-left: 4px solid transparent;
+            }
+
+                .sidebar .nav-link:hover {
+                    color: white;
+                    background: rgba(255,255,255,0.1);
+                    border-left-color: #007bff;
+                }
+
+        /* Main content - COMPATÍVEL com teu index.html */
+        .main-content {
+            margin-left: 260px;
+            padding: 20px;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* Teus cards e gráficos funcionam perfeitamente */
+        .card {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+  
+    <nav class="sidebar">
+        {% if session.user_id %}
+        <div class="navbar-text ms-auto">
+            👋 <strong>{{ session.user_nome }}</strong>
+            ({{ session.user_tipo|upper }})
+            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+        </div>
+        {% endif %}
+
+        <div class="p-3 border-bottom bg-primary text-white">
+            <h5>🏭 SOCEM</h5>
+            <small>Armazém Moldes</small>
+        </div>
+        <ul class="nav flex-column px-2 pt-2">
+            <li class="nav-item">
+                <a class="nav-link active" href="/"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/moldes"><i class="fas fa-list me-2"></i>Lista Moldes</a>
+            </li>
+
+            <li><a href="/pecas" class="nav-link"><i class="fas fa-cogs me-2"></i>Lista Peças</a></li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/localizacoes">
+                    <i class="fas fa-map-marker-alt nav-icon"></i>
+                    <p>Localizações</p>
+                </a>
+            </li>
+
+            <li class="nav-item"><a class="nav-link" href="/procurar"><i class="fas fa-search me-2"></i>Procurar</a></li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/molde/criar"><i class="fas fa-cube me-2"></i>Novo Molde</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/peca/criar"><i class="fas fa-cogs me-2"></i>Nova Peça</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/movimento/molde"><i class="fas fa-truck me-2"></i>Mover Moldes</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/movimento/peca"><i class="fas fa-exchange-alt me-2"></i>Mover Peça</a>
+            </li>
+
+
+
+
+
+
+            {% if session.user_tipo == 'admin' %}
+            <li class="nav-item"><a class="nav-link" href="/usuarios"><i class="fas fa-users me-2"></i>Users</a></li>
+            {% endif %}
+            <li class="nav-item mt-auto pt-3">
+                <a class="nav-link text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Sair</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+            {{ message|safe }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

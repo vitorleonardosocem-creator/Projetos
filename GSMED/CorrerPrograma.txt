@@ -1,0 +1,19 @@
+Abrir CMD como ADMINISTRADOR:
+
+ir ate a pasta - > cd C:\Ferramentas_SOCEM\GSMED
+
+Se for uma instancia nova, correr isto para instalar -> pip install fastapi uvicorn jinja2 pandas openpyxl pyodbc python-multipart
+
+ligar o servidor -> uvicorn main:app --host 0.0.0.0 --port 8000
+
+Saida esperada:
+INFO:     Started server process [1234]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+
+
+ir ao browser do nosso pc
+
+http://192.168.10.156:8000
+admin / admin123 

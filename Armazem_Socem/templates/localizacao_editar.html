@@ -1,0 +1,33 @@
+﻿{% extends "base.html" %}
+{% block title %}Editar Localização{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h2><i class="fas fa-edit me-2 text-warning"></i>Editar {{ localizacao[1] }}</h2>
+        <a href="/localizacoes" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+
+    <form method="POST">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Nome *</label>
+                <input type="text" name="nome" class="form-control" value="{{ localizacao[1] }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tipo *</label>
+                <select name="tipo_localizacao" class="form-select" required>
+                    <option value="Interno" {% if localizacao[2] == 'Interno' %}selected{% endif %}>🏭 Interno</option>
+                    <option value="Externo" {% if localizacao[2] == 'Externo' %}selected{% endif %}>🌍 Externo</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-save me-2"></i>Atualizar Localização
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

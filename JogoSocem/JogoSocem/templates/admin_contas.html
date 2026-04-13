@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <title>👥 Gestão de Contas — WorkScore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .sidebar { position:fixed; left:0; top:0; height:100vh; width:250px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); z-index:1000; overflow-y:auto; }
+        .menu-item { padding:12px 16px; cursor:pointer; color:white; transition:background 0.2s; border-left:4px solid transparent; font-size:0.9rem; }
+        .menu-item:hover { background:rgba(255,255,255,0.2); border-left-color:#fff; }
+        .content { margin-left:250px; padding:30px; min-height:100vh; }
+        .badge-admin { background:#fef3c7; color:#92400e; }
+        .badge-user  { background:#dbeafe; color:#1e40af; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100">
+
+<div class="sidebar">
+    <div class="p-5 border-b border-white/20">
+        <h2 class="text-xl font-bold text-white text-center">🎮 WorkScore</h2>
+        {% if request.state.user %}
+        <p class="text-white/70 text-xs text-center mt-1">{{ request.state.user.username }} ({{ request.state.user.tipo }})</p>
+        {% endif %}
+    </div>
+    <div class="menu-item" onclick="location.href='/'">🏠 Dashboard</div>
+    <div class="menu-item" onclick="location.href='/departamentos'">🏢 Departamentos</div>
+    <div class="menu-item" onclick="location.href='/historico'">📜 Histórico Anual</div>
+    <div style="border-top:1px solid rgba(255,255,255,0.2); margin:8px 0;"></div>
+    <div class="menu-item font-bold" style="background:rgba(255,255,255,0.15); border-left-color:#fff;" onclick="location.href='/admin/contas'">👥 Contas / Login</div>
+    <div class="menu-item" onclick="location.href='/admin-departamentos'">🏢 Departamentos</div>
+    <div class="menu-item" onclick="location.href='/admin-equipas'">🏭 Equipas</div>
+    <div class="menu-item" onclick="location.href='/admin-users'">👤 Colaboradores</div>
+    <div class="menu-item" onclick="location.href='/admin-pontos'">⭐ Atribuir Pontos</div>
+    <div class="menu-item" onclick="location.href='/admin/loja'">⚙️ Admin Loja</div>
+    <div class="menu-item" onclick="location.href='/admin/reprocessar'">🔄 Reprocessar Sinex</div>
+    <div class="menu-item" onclick="location.href='/admin/relatorio'">📊 Relatório Mensal</div>
+    <div style="border-top:1px solid rgba(255,255,255,0.2); margin:8px 0;"></div>
+    <div class="menu-item" onclick="location.href='/logout'" style="color:#fca5a5;">🚪 Sair</div>
+</div>
+
+<div class="content">
+<div class="max-w-5xl mx-auto">
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">👥 Gestão de Contas</h1>
+        <p class="text-gray-500 mt-1">Cria e gere os acessos ao WorkScore. Cada conta pode ser Admin ou Utilizador.</p>
+    </div>
+
+    {% if msg %}
+    <div class="mb-6 px-5 py-3 rounded-xl font-semibold text-sm
+        {% if '✅' in msg %}bg-green-100 text-green-700 border border-green-200
+        {% else %}bg-red-100 text-red-700 border border-red-200{% endif %}">
+        {{ msg }}
+    </div>
+    {% endif %}
+
+    <!-- Criar nova conta -->
+    <div class="bg-white rounded-2xl shadow-xl border border-blue-100 p-8 mb-8">
+        <h2 class="text-xl font-bold text-gray-700 mb-6">➕ Nova Conta</h2>
+        <form method="POST" action="/admin/contas/criar" class="space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nome de Utilizador</label>
+                    <input type="text" name="username" required maxlength="50"
+                           placeholder="ex: joao.silva"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-800">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                    <input type="password" name="password" required minlength="4"
+                           placeholder="mínimo 4 caracteres"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-800">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo</label>
+                    <select name="tipo" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-800">
+                        <option value="user">👤 Utilizador (vê só a sua área)</option>
+                        <option value="admin">🔑 Admin (acesso total)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Colaborador associado
+                        <span class="font-normal text-gray-400">(opcional para admins)</span>
+                    </label>
+                    <select name="user_id"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-800">
+                        <option value="">— Sem colaborador associado —</option>
+                        {% for u in users_sem_conta %}
+                        <option value="{{ u.id }}">{{ u.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">
+                <strong>ℹ️ Tipos de conta:</strong><br>
+                <span class="font-semibold">Utilizador</span> — Vê apenas a sua pontuação e pode resgatar na Loja.<br>
+                <span class="font-semibold">Admin</span> — Acesso total ao sistema (dashboard, relatórios, configurações).
+            </div>
+
+            <button type="submit"
+                    class="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
+                ➕ Criar Conta
+            </button>
+        </form>
+    </div>
+
+    <!-- Lista de contas existentes -->
+    <div class="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h2 class="text-lg font-bold text-gray-700">📋 Contas Existentes ({{ contas | length }})</h2>
+        </div>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-left">
+                    <th class="px-6 py-3 font-medium">Utilizador</th>
+                    <th class="px-6 py-3 font-medium">Tipo</th>
+                    <th class="px-6 py-3 font-medium">Colaborador</th>
+                    <th class="px-6 py-3 font-medium text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for c in contas %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-semibold text-gray-800">
+                        {% if request.state.user and request.state.user.conta_id == c.id %}
+                        <span class="text-purple-600">{{ c.username }} <span class="text-xs font-normal">(tu)</span></span>
+                        {% else %}
+                        {{ c.username }}
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold
+                            {% if c.tipo == 'admin' %}badge-admin{% else %}badge-user{% endif %}">
+                            {% if c.tipo == 'admin' %}🔑 Admin{% else %}👤 Utilizador{% endif %}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600">{{ c.colaborador_nome }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center gap-2">
+                            <!-- Alterar password -->
+                            <button onclick="abrirPassword({{ c.id }}, '{{ c.username }}')"
+                                    class="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-semibold hover:bg-amber-200 transition">
+                                🔑 Password
+                            </button>
+                            <!-- Eliminar (não pode ser a própria conta) -->
+                            {% if not (request.state.user and request.state.user.conta_id == c.id) %}
+                            <form method="POST" action="/admin/contas/delete" class="inline"
+                                  onsubmit="return confirm('Eliminar a conta de {{ c.username }}?')">
+                                <input type="hidden" name="conta_id" value="{{ c.id }}">
+                                <button type="submit"
+                                        class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-200 transition">
+                                    🗑️ Eliminar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center text-gray-400">
+                        Nenhuma conta criada ainda.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</div>
+
+<!-- Modal alterar password -->
+<div id="modal-password" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+        <h3 class="text-lg font-bold text-gray-800 mb-1">🔑 Alterar Password</h3>
+        <p class="text-sm text-gray-500 mb-5">Conta: <strong id="modal-username"></strong></p>
+        <form method="POST" action="/admin/contas/password">
+            <input type="hidden" name="conta_id" id="modal-conta-id">
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Nova Password</label>
+                <input type="password" name="nova_password" required minlength="4"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                       placeholder="mínimo 4 caracteres">
+            </div>
+            <div class="flex gap-3">
+                <button type="submit"
+                        class="flex-1 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition">
+                    Guardar
+                </button>
+                <button type="button" onclick="fecharPassword()"
+                        class="flex-1 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirPassword(contaId, username) {
+    document.getElementById('modal-conta-id').value = contaId;
+    document.getElementById('modal-username').textContent = username;
+    document.getElementById('modal-password').classList.remove('hidden');
+}
+function fecharPassword() {
+    document.getElementById('modal-password').classList.add('hidden');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Compile Update="Aprovacao.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Clientes.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Fornecedores.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Grafico_Empresas.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Grafico_Total_Visitantes.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="InserirVisitantes.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="InserirVisitantesFornecedores.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ListaClientes.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ListaFornecedores.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ListaVisitantes.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ListaVisitantesFornecedores.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Lista_Individual.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Menu.vb">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>

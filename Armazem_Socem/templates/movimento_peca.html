@@ -1,0 +1,171 @@
+﻿{% extends "base.html" %}
+{% block title %}Mover Peça{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <div class="container mt-4">
+        <!-- 🔙 BOTÃO VOLTAR (Role-Based) -->
+        <div class="row mb-4">
+            <div class="col-12">
+                {% if session.user_tipo == 'operador' %}
+                <a href="/dashboard_operador" class="btn btn-outline-primary btn-lg shadow-sm mb-3">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar Menu Operador
+                </a>
+                {% else %}
+                <a href="/" class="btn btn-outline-secondary btn-lg shadow-sm mb-3">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar Dashboard Admin
+                </a>
+                {% endif %}
+            </div>
+        </div>
+       
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-exchange-alt me-2 text-warning"></i>Mover Peça</h2>
+            <a href="/pecas" class="btn btn-outline-secondary">
+                <i class="fas fa-list me-2"></i>Lista Peças
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <form method="POST" id="movimentoForm">
+                            <div class="row g-3">
+
+                                <!-- PEÇA -->
+
+                                <div class="col-md-6">
+                                    <label>Código Peça</label>
+                                    <div class="input-group">
+                                        <input type="text" id="codigo_peca_result" name="codigo_peca" class="form-control" readonly>
+                                        <button type="button" onclick="scanPecaLive()" class="btn btn-success">🔴 LIVE QR</button>
+                                    </div>
+                                </div>
+
+                                <!-- LOCAL -->
+                                <div class="col-md-6">
+                                    <label>Localização</label>
+                                    <div class="input-group">
+                                        <input type="text" id="localizacao_result" name="barcode_localizacao" class="form-control" readonly>
+                                        <button type="button" onclick="scanLocalLive()" class="btn btn-warning">🔵 LIVE Barcode</button>
+                                    </div>
+                                </div>
+
+
+                                <!-- Após os teus 2 inputs de peça/localização -->
+                                <div class="col-12 mb-4">
+                                    <div id="reader" style="width:100%; height:350px; border:3px solid #28a745; border-radius:10px; display:none;"></div>
+                                </div>
+
+                                <!-- Observações input aqui... -->
+
+
+
+                                <div class="col-12">
+                                    <label class="form-label">Observações</label>
+                                    <textarea class="form-control" name="observacoes" rows="2"
+                                              placeholder="Motivo da mudança (opcional)"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-warning btn-lg px-5">
+                                        <i class="fas fa-exchange-alt me-2"></i>Mover
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar últimas (mantém igual) -->
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-history me-2"></i>Últimas Movidas</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if ultimas_pecas %}
+                        {% for peca in ultimas_pecas %}
+                        <div class="p-3 border-bottom">
+                            <div class="fw-bold small">{{ peca[0] }}</div>
+                            <small class="text-muted">{{ peca[1] }}</small>
+                            {% if peca[2] %}<br><small class="text-info">Molde: {{ peca[2] }}</small>{% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="p-4 text-center text-muted">Nenhuma ainda</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔴 SCRIPT SCANNER (final da página) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+
+
+    <!-- Adiciona DIV para scanner -->
+    <div id="reader" style="width:100%; height:300px; border:2px solid green; display:none;"></div>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <script>
+        const html5QrCode = new Html5Qrcode("reader");
+
+        async function scanPecaLive() {
+            document.getElementById('reader').style.display = 'block';
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 15, qrbox: { width: 300, height: 300 } },
+                (result) => {
+                    document.getElementById('codigo_peca_result').value = result;
+                    html5QrCode.stop().then(clearScanner);
+                    alert('✅ Peça: ' + result);
+                },
+                () => { }
+            ).catch(() => alert('Ativa: chrome://flags → "Insecure origins" → teu IP'));
+        }
+
+        async function scanLocalLive() {
+            document.getElementById('reader').style.display = 'block';
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 15, qrbox: { width: 300, height: 300 } },
+                (result) => {
+                    document.getElementById('localizacao_result').value = result;
+                    html5QrCode.stop().then(clearScanner);
+                    alert('✅ Local: ' + result);
+                },
+                () => { }
+            ).catch(() => alert('Ativa flag chrome://flags'));
+        }
+
+        function clearScanner() {
+            document.getElementById('reader').style.display = 'none';
+        }
+    </script>
+
+
+
+    <style>
+        #no-display {
+            display: none;
+            height: 0;
+        }
+    </style>
+
+
+
+
+    <style>
+        #no-display {
+            display: none;
+            height: 0;
+        }
+    </style>
+
+    {% endblock %}

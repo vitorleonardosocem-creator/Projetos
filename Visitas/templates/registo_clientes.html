@@ -1,0 +1,197 @@
+﻿{% extends "base.html" %}
+{% block title %}Client Registration - SOCEM{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <img src="/static/imagens/socem.jpg" alt="SOCEM" class="img-fluid mb-2" style="max-height: 80px;" onerror="this.style.display='none'">
+                    <h2 class="mb-0">{{ textos.client_registration }}</h2>
+                    <p class="mb-0 opacity-75">{{ textos.fill_client }}</p>
+                </div>
+                <div class="card-body p-5">
+				<style>
+.card-header.bg-primary {
+    background-color: #E01F26 !important;
+    border-color: #E01F26 !important;
+}
+
+.btn-primary {
+    background-color: #E01F26 !important;
+    border-color: #E01F26 !important;
+    color: #ffffff !important;
+}
+
+.btn-primary:hover {
+    background-color: #c91920 !important;
+    border-color: #c91920 !important;
+    color: #ffffff !important;
+}
+
+.btn-outline-secondary {
+    color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    color: #ffffff !important;
+    border-color: #6c757d !important;
+}
+</style>
+
+                    <form id="clienteForm">
+                        <div class="mb-4">
+                            <label for="txtName" class="form-label fw-bold"> {{ textos.name }} <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="txtName" list="nomesClientes" placeholder="" autocomplete="off" required>
+                            <datalist id="nomesClientes"></datalist>
+                            <div class="form-text">{{ textos.suggestions }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="txtEmpresa" class="form-label fw-bold">{{ textos.company }}</label>
+                                <input type="text" class="form-control form-control-lg" id="txtEmpresa" placeholder="">
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="txtName" class="form-label fw-bold">
+                                    {{ textos.phone }} <span class="text-danger"></span>
+                                </label>
+                                <input type="tel" class="form-control form-control-lg" id="txtPhone" placeholder="">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="txtEmail" class="form-label fw-bold">{{ textos.email }}</label>
+                                <input type="email" class="form-control form-control-lg" id="txtEmail" placeholder={{textos.email_exemplo}}>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="txtResponsavel" class="form-label fw-bold">{{ textos.contact_person }}</label>
+                                <select id="txtResponsavel" class="form-control form-control-lg">
+                                    <option value="">{{textos.selecionar_responsavel}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold py-3">🚀 {{ textos.register_client_btn }}</button>
+                            <a href="/clientes" class="btn btn-outline-secondary btn-lg fw-bold py-3">{{ textos.back }}</a>
+                        </div>
+                    </form>
+                    <div id="message" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    fetch('/api/responsaveis')
+        .then(r => r.json())
+        .then(lista => {
+            const select = document.getElementById('txtResponsavel');
+
+            lista.forEach(nome => {
+                const option = document.createElement('option');
+                option.value = nome;
+                option.textContent = nome;
+                select.appendChild(option);
+            });
+
+            console.log("✅ Responsáveis carregados (clientes):", lista);
+        })
+        .catch(err => console.error("Erro responsáveis:", err));
+
+
+
+    let nomesClientes = [];
+    const form = document.getElementById('clienteForm');
+    const nomeInput = document.getElementById('txtName');
+    const datalist = document.getElementById('nomesClientes');
+    const btn = form.querySelector('button[type="submit"]');
+
+    // Carrega nomes Clientes
+    fetch('/api/nomes/clientes')
+        .then(r => r.json())
+        .then(nomes => {
+            nomesClientes = nomes;
+            nomes.forEach(nome => {
+                const option = document.createElement('option');
+                option.value = nome;
+                datalist.appendChild(option);
+            });
+            console.log(`✅ Clientes carregados: ${nomes.length}`);
+        })
+        .catch(err => console.error('Erro nomes:', err));
+
+    // Auto-preenche ao digitar/selecionar
+    nomeInput.addEventListener('input', debounce(async (e) => {
+        const nome = e.target.value;
+        if (nome.length < 2) return;
+
+        const registo = await fetch(`/api/carregar_cliente?nome=${encodeURIComponent(nome)}`)
+            .then(r => r.json())
+            .catch(() => ({}));
+
+        if (registo.empresa) {
+            document.getElementById('txtEmpresa').value = registo.empresa;
+            document.getElementById('txtPhone').value = registo.telefone || '';
+            document.getElementById('txtEmail').value = registo.email || '';
+            // Responsavel manual (vazio)
+            console.log('✅ Cliente preenchido:', registo);
+        }
+    }, 300));
+
+    function debounce(fn, delay) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn(...args), delay);
+        };
+    }
+
+    function showMessage(msg, type = 'success') {
+        const div = document.getElementById('message');
+        div.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    }
+
+    function setLoading(loading) {
+        btn.disabled = loading;
+        btn.innerHTML = loading ? '⏳ A registar...' : '🚀 Registar Cliente';
+    }
+
+    // Submit FormData - FINAL
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const formData = new FormData();
+        formData.append('nome', document.getElementById('txtName').value);
+        formData.append('empresa', document.getElementById('txtEmpresa').value);
+        formData.append('telefone', document.getElementById('txtPhone').value);
+        formData.append('email', document.getElementById('txtEmail').value);
+        formData.append('responsavel', document.getElementById('txtResponsavel').value);
+
+        try {
+            const resp = await fetch('/api/registar_cliente', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await resp.json();
+
+            if (resp.ok) {
+                showMessage(result.message || '✅ Registado com sucesso!', 'success');
+                setTimeout(() => window.location.href = '/clientes', 1500);
+            } else {
+                showMessage(result.detail || 'Erro ao registar!', 'danger');
+            }
+        } catch (err) {
+            console.error(err);
+            showMessage('Erro de rede!', 'danger');
+        } finally {
+            setLoading(false);
+        }
+    });
+</script>
+{% endblock %}

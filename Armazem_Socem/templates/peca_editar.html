@@ -1,0 +1,47 @@
+﻿{% extends "base.html" %}{% block title %}Editar Peça{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between mb-4">
+        <h2><i class="fas fa-edit"></i> Editar Peça {{ peca[1] }}</h2>
+        <a href="/pecas" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+    </div>
+
+    <form method="POST">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Código</label>
+                <input class="form-control" value="{{ peca[1] }}" disabled>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Molde</label>
+                <select name="molde_id" class="form-select" disabled>
+                    {% for molde in moldes %}
+                    <option value="{{ molde[0] }}" {% if molde[0] == peca[3] %}selected{% endif %}>
+                        {{ molde[1] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Localização *</label>
+                <select name="localizacao_id" class="form-select" required>
+                    {% for loc in localizacoes %}
+                    <option value="{{ loc[0] }}" {% if loc[0] == peca[4] %}selected{% endif %}>
+                        {{ loc[1] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Observações</label>
+                <input name="observacoes" class="form-control" value="{{ peca[5] or '' }}">
+            </div>
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-save me-2"></i>Atualizar Peça
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

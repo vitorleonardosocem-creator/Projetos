@@ -1,0 +1,118 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="mb-3">
+    <button class="btn btn-danger btn-lg"
+            onclick="window.location.href='/'">
+
+       {{ textos.return_crachas }}
+
+    </button>
+</div>
+<div class="container-fluid py-5">
+    <div class="row justify-content-center align-items-center g-4">
+        <!-- Crachá Fornecedores (esquerda) -->
+        <div class="col-md-4 col-sm-5 text-center position-relative badge-container">
+            <a href="/fornecedores" class="badge-link">
+                <div class="badge-frame fornecedores">
+                    <div class="badge-handle"></div>
+                    <div class="badge-text">{{ textos.supplier_badge }}</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Separador vertical -->
+        <div class="col-md-1 col-sm-1 d-none d-md-block separator"></div>
+
+        <!-- Crachá Clientes (direita) -->
+        <div class="col-md-4 col-sm-5 text-center position-relative badge-container">
+            <a href="/clientes" class="badge-link">
+                <div class="badge-frame clientes">
+                    <div class="badge-handle"></div>
+                    <div class="badge-text">{{ textos.client_badge }}</div>
+                </div>
+            </a>  
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-container {
+        height: 300px; /* Altura fixa como na imagem */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .badge-link {
+        display: block;
+        height: 100%;
+        text-decoration: none;
+    }
+
+    .badge-frame {
+        position: relative;
+        width: 280px; /* Largura como na imagem */
+        height: 600px;
+        border: 8px solid #E01F26; /* Azul SOCEM CSS */
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 8px 25px rgba(0,169,244,0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-top: 0px; /* Espaço para alça */
+    }
+
+        .badge-frame:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,169,244,0.4);
+        }
+
+    .badge-handle {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 32px;
+        background: #E01F26;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 4px 12px rgba(0,169,244,0.4);
+    }
+
+        .badge-handle::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            right: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 0 0 10px 10px;
+        }
+
+    .badge-text {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    /* Responsivo: mobile empilha vertical */
+    @media (max-width: 768px) {
+        .badge-frame {
+            width: 260px;
+            height: 240px;
+        }
+
+        .badge-container {
+            height: 280px;
+        }
+    }
+</style>
+{% endblock %}

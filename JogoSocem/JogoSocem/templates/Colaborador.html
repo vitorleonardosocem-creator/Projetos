@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ user.nome }}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI';
+            background: #f4f6f9;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 230px;
+            background: #1e293b;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+        }
+
+            .sidebar h2 {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+        .menu-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: #334155;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+            .menu-item:hover {
+                background: #475569;
+            }
+
+        .main {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 3px 10px rgba(0,0,0,0.05);
+        }
+
+            .card h3 {
+                margin: 0;
+                color: #64748b;
+            }
+
+        .value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 3px 10px rgba(0,0,0,0.05);
+        }
+
+        th {
+            background: #0f172a;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background: #f1f5f9;
+        }
+
+        .green {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .red {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .back {
+            background: #2563eb;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="sidebar">
+            <h2>🎮 WorkScore</h2>
+            <div class="menu-item" onclick="location.href='/'">🏠 Dashboard</div>
+            <div class="menu-item"
+                 onclick="location.href='/departamento/{{ user.departamento }}'">
+                🏢 Departamento
+            </div>
+        </div>
+
+        <div class="main">
+
+            <h1>👤 {{ user.nome }}</h1>
+            <p><b>Departamento:</b> {{ user.departamento }}</p>
+            <p><b>Equipa:</b> {{ user.equipa }}</p>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>Pontos Totais</h3>
+                    <div class="value">{{ user.pontos_total }}</div>
+                </div>
+
+                <div class="card">
+                    <h3>Férias Ganhas</h3>
+                    <div class="value">{{ user.ferias_ganhas }}</div>
+                </div>
+
+                <div class="card">
+                    <h3>Ranking Dept</h3>
+                    <div class="value">#{{ pos_dept }}</div>
+                </div>
+
+                <div class="card">
+                    <h3>Ranking Empresa</h3>
+                    <div class="value">#{{ pos_geral }}</div>
+                </div>
+            </div>
+
+            <h2>📜 Histórico Recente</h2>
+
+            <table>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Pontos</th>
+                    <th>Data</th>
+                </tr>
+
+                {% for e in eventos %}
+                <tr>
+                    <td>{{ e.tipo }}</td>
+                    <td class="{% if e.pontos > 0 %}green{% else %}red{% endif %}">
+                        {{ e.pontos }}
+                    </td>
+                    <td>{{ e.data_evento }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <br><br>
+            <a href="/departamento/{{ user.departamento }}" class="back">
+                ⬅ Voltar ao Departamento
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

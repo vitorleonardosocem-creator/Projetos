@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Ranking Geral</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            text-align: center;
+        }
+
+        .podium {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .card {
+            padding: 30px;
+            border-radius: 15px;
+            width: 200px;
+        }
+
+        .gold {
+            background: #d4af37;
+        }
+
+        .silver {
+            background: #94a3b8;
+        }
+
+        .bronze {
+            background: #cd7f32;
+        }
+
+        .rest {
+            margin-top: 40px;
+            background: white;
+            color: black;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 20px;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🏆 Ranking Geral</h1>
+
+    <div class="podium">
+        {% for l in leader[:3] %}
+        <div class="card {% if loop.index==1 %}gold{% elif loop.index==2 %}silver{% else %}bronze{% endif %}">
+            <h2>{{ loop.index }}º</h2>
+            <h3>{{ l.nome }}</h3>
+            <p>{{ l.pontos_total }} pts</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="rest">
+        <h2>Outros</h2>
+        <table width="100%">
+            {% for l in leader[3:] %}
+            <tr>
+                <td>{{ loop.index + 3 }}</td>
+                <td>{{ l.nome }}</td>
+                <td>{{ l.pontos_total }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</body>
+</html>

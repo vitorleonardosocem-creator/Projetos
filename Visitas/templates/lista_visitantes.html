@@ -1,0 +1,126 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-8">
+        <table class="table table-bordered">
+            <thead class="grid-header">
+                <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Label</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in visitantes %}
+                <tr>
+                    <td>{{ v.Nome }}</td>
+                    <td>{{ v.Empresa }}</td>
+                    <td>{{ v.Data }}</td>
+                    <td>
+                        <form method="post" action="/checkin/{{ v.Id }}">
+                            <button class="btn btn-socem btn-sm" type="submit">
+                                Check-in
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="post" action="/label-existente/{{ v.Id }}">
+                            <button class="btn btn-outline-primary btn-sm" type="submit">
+                                Existing label
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if tipo == 'clientes' %}
+        <!-- 10 botões clientes data-grupo="1" a "10", tipo="clientes" -->
+        {% elif tipo == 'fornecedores' %}
+        <!-- 7 botões fornecedores data-grupo="11" etc., tipo="fornecedores" -->
+        {% endif %}
+        <p class="small text-muted">
+            Personal Data Protection... (colocas aqui o mesmo texto do rodapé que tens no VB).
+        </p>
+    </div>
+
+    <div class="col-4">
+        <h5>👥 Selecione a equipa</h5>
+
+        <div class="alert alert-info">
+            <strong id="grupo-info">Nenhuma equipa selecionada</strong>
+        </div>
+
+        <div class="row g-1 mb-4" id="botoes-equipa">
+            <div class="col-6">
+                <button class="btn btn-socem w-100 mb-1 equipa-btn" data-grupo="11">Manutenção</button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-socem w-100 mb-1 equipa-btn" data-grupo="12">Compras</button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-socem w-100 mb-1 equipa-btn" data-grupo="13">Fabrico</button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-socem w-100 mb-1 equipa-btn" data-grupo="14">Comercial</button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-socem w-100 mb-1 equipa-btn" data-grupo="15">Logística</button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-socem w-100 mb-1 equipa-btn" data-grupo="16">Informática</button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-socem w-100 mb-1 equipa-btn" data-grupo="17">Qualidade</button>
+            </div>
+        </div>
+
+        <div class="mt-4 d-grid gap-2">
+            <a href="/" class="btn btn-secondary">&lt;&lt; Voltar</a>
+            <button id="btn-registo" class="btn btn-outline-primary">Registo</button>
+        </div>
+
+        <script>
+    let grupoSelecionado = {{ request.cookies.get("grupo_id", "0")|default(0) }};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (grupoSelecionado > 0) {
+            destacarBotao(grupoSelecionado);
+        }
+
+        document.querySelectorAll('.equipa-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const grupoId = this.dataset.grupo;
+                grupoSelecionado = parseInt(grupoId);
+                destacarBotao(grupoId);
+
+                // Envia para servidor persistir cookie
+                fetch('/selecionar-grupo', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `grupo_id=${grupoId}&tipo={{ tipo }}`
+                });
+            });
+        });
+    });
+
+    function destacarBotao(id) {
+        document.querySelectorAll('.equipa-btn').forEach(b => {
+            b.classList.remove('btn-primary', 'active');
+        });
+        const btnAtivo = document.querySelector(`[data-grupo="${id}"]`);
+        if (btnAtivo) {
+            btnAtivo.classList.add('btn-primary', 'active');
+            document.getElementById('grupo-info').innerText = `Grupo ${id} selecionado ✓`;
+        }
+    }
+        </script>
+    </div>
+
+  
+</div>
+
+{% endblock %}

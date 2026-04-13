@@ -1,0 +1,362 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>⭐ Admin Pontos - WorkScore</title>
+    <style>
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+            .header h1 {
+                font-size: 2.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+        .form-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        select, button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select {
+            background: #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            min-width: 300px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 15px 30px rgba(102,126,234,0.4);
+            }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
+            gap: 1.5rem;
+        }
+
+        .user-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-align: center;
+        }
+
+            .user-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            }
+
+        .user-nome {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-equipa {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-pontos {
+            background: var(--success);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 3rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+            .close:hover {
+                color: #333;
+            }
+
+        .tarefas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .tarefa {
+            padding: 1rem;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+            .tarefa:hover {
+                border-color: var(--primary);
+                background: var(--primary);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+            .tarefa.selected {
+                border-color: var(--success);
+                background: var(--success);
+                color: white;
+            }
+
+        .btn-save {
+            background: var(--success);
+            color: white;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            margin-top: 2rem;
+            width: 100%;
+        }
+
+            .btn-save:hover {
+                background: #059669;
+                transform: translateY(-2px);
+            }
+
+        .back {
+            display: inline-block;
+            color: #666;
+            text-decoration: none;
+            margin-top: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .msg {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+            .msg.success {
+                background: var(--success);
+                color: white;
+            }
+
+            .msg.error {
+                background: var(--danger);
+                color: white;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⭐ Atribuir Pontos aos Colaboradores</h1>
+            <p>Seleciona departamento → Clica colaborador → Escolhe tarefas → Guarda!</p>
+            {% if request.query_params.msg %}
+            <div class="msg {{ 'success' if '✅' in request.query_params.msg else 'error' }}">{{ request.query_params.msg }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <select id="dept-select" onchange="carregarColaboradores()">
+                <option value="">👇 Seleciona Departamento</option>
+                {% for dept in departamentos %}
+                <option value="{{ dept.id }}">{{ dept.nome }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn-primary" onclick="carregarColaboradores()">🔄 Atualizar</button>
+        </div>
+
+        <div id="users-container" class="users-grid" style="display:none;">
+            <!-- Colaboradores carregam aqui via JS -->
+        </div>
+
+        <a href="/" class="back">⬅ Voltar ao Dashboard</a>
+    </div>
+
+    <!-- Modal Tarefas -->
+    <div id="tarefas-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal()">&times;</span>
+            <h2 id="modal-user-nome"></h2>
+            <p id="modal-user-equipa"></p>
+            <p id="modal-user-pontos"></p>
+            <div>Seleciona tarefas (múltiplas OK):</div>
+            <div class="tarefas-grid">
+                <div class="tarefa" onclick="toggleTarefa(this)" data-tarefa="Assiduidade">✅ Assiduidade</div>
+                <div class="tarefa" onclick="toggleTarefa(this)" data-tarefa="Sem Problemas">🔧 Trabalho sem problemas</div>
+                <div class="tarefa" onclick="toggleTarefa(this)" data-tarefa="Limpeza">🧹 Limpeza local</div>
+                <div class="tarefa" onclick="toggleTarefa(this)" data-tarefa="Molde OK">⚙️ Molde sem defeitos</div>
+                <div class="tarefa" onclick="toggleTarefa(this)" data-tarefa="SINEX OK">📊 SINEX produtivo</div>
+                <div class="tarefa" onclick="toggleTarefa(this)" data-tarefa="Outros">⭐ Outros méritos</div>
+            </div>
+            <input type="hidden" id="selected-tarefas" value="">
+            <button class="btn-save" onclick="guardarPontos()">💾 Guardar Pontos</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = null;
+        const tarefasList = ["Assiduidade", "Sem Problemas", "Limpeza", "Molde OK", "SINEX OK", "Outros"];
+
+        async function carregarColaboradores() {
+            const deptId = document.getElementById('dept-select').value;
+            if (!deptId) return;
+
+            try {
+                const response = await fetch('/dept-colaboradores', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: new URLSearchParams({dept_id: deptId})
+                });
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                const container = document.getElementById('users-container');
+                container.innerHTML = '';
+                data.users.forEach(user => {
+                    const card = document.createElement('div');
+                    card.className = 'user-card';
+                    card.onclick = () => abrirModal(user);
+                    card.innerHTML = `
+                        <div class="user-nome">${user.nome}</div>
+                        <div class="user-equipa">🏢 ${user.equipa || 'N/A'}</div>
+                        <div class="user-pontos">⭐ ${user.pontos_total} pts</div>
+                    `;
+                    container.appendChild(card);
+                });
+                container.style.display = 'grid';
+            } catch (error) {
+                alert('Erro: ' + error.message);
+            }
+        }
+
+        function abrirModal(user) {
+            currentUserId = user.id;
+            document.getElementById('modal-user-nome').textContent = user.nome;
+            document.getElementById('modal-user-equipa').textContent = `Equipa: ${user.equipa || 'N/A'}`;
+            document.getElementById('modal-user-pontos').textContent = `Atual: ⭐ ${user.pontos_total} pts`;
+            document.getElementById('selected-tarefas').value = '';
+            document.querySelectorAll('.tarefa').forEach(t => t.classList.remove('selected'));
+            document.getElementById('tarefas-modal').style.display = 'block';
+        }
+
+        function fecharModal() {
+            document.getElementById('tarefas-modal').style.display = 'none';
+        }
+
+        function toggleTarefa(el) {
+            el.classList.toggle('selected');
+            const selected = Array.from(document.querySelectorAll('.tarefa.selected')).map(t => t.dataset.tarefa).join(',');
+            document.getElementById('selected-tarefas').value = selected;
+        }
+
+        async function guardarPontos() {
+            const tarefas = document.getElementById('selected-tarefas').value;
+            if (!tarefas) return alert('Seleciona tarefas!');
+
+            try {
+                const response = await fetch('/atribuir-pontos', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: new URLSearchParams({user_id: currentUserId, tarefas: tarefas})
+                });
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+                alert(data.success);
+                fecharModal();
+                carregarColaboradores();  // Refresh lista pontos
+                location.href = '/admin-pontos?msg=' + encodeURIComponent(data.success);
+            } catch (error) {
+                alert('Erro: ' + error.message);
+            }
+        }
+
+        window.onclick = (e) => { if (e.target.classList.contains('modal')) fecharModal(); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+﻿{% extends "base.html" %}
+{% block title %}Criar Peça{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-cube me-2 text-info"></i>Criar Peça</h2>
+        <a href="/moldes" class="btn btn-outline-secondary">
+            <i class="fas fa-list me-2"></i>Lista Moldes
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+        {{ message | safe }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="card shadow">
+        <div class="card-body p-4">
+            <form method="post">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Molde <span class="text-danger">*</span></label>
+                        <select name="molde_id" class="form-select form-select-lg" required>
+                            <option value="">Seleciona molde...</option>
+                            {% for molde_id, molde_nome in moldes %}
+                            <option value="{{ molde_id }}">{{ molde_nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Código Peça <span class="text-danger">*</span></label>
+                        <input type="text" name="codigo_peca" class="form-control form-control-lg" required
+                               placeholder="Ex: 100" autocomplete="off">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Localização Inicial <span class="text-danger">*</span></label>
+                        <select name="localizacao_id" class="form-select form-select-lg" required>
+                            <option value="">Seleciona localização...</option>
+                            {% for loc_id, loc_nome in localizacoes %}
+                            <option value="{{ loc_id }}">{{ loc_nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Observações</label>
+                        <textarea name="observacoes" class="form-control" rows="3"
+                                  placeholder="Detalhes da peça (opcional)"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <input type="hidden" id="imprimir_qr" name="imprimir_qr" value="0">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="chk_imprimir_qr" onchange="toggleImprimir()">
+                            <label class="form-check-label fw-semibold" for="chk_imprimir_qr">
+                                <i class="fas fa-print me-1 text-success"></i>Imprimir QR Code após criar
+                            </label>
+                        </div>
+                        <div class="d-flex gap-3 justify-content-center">
+                            <button type="submit" class="btn btn-success btn-lg px-5" onclick="document.getElementById('imprimir_qr').value='0'">
+                                <i class="fas fa-save me-2"></i>Gravar Apenas
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg px-5" onclick="document.getElementById('imprimir_qr').value='1'">
+                                <i class="fas fa-save me-2"></i>Gravar + Imprimir QR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleImprimir() {
+    document.getElementById('imprimir_qr').value = document.getElementById('chk_imprimir_qr').checked ? '1' : '0';
+}
+</script>
+{% endblock %}

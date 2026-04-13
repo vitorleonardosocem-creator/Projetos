@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>GSMED - Gestão Material Informático</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        form {
+            margin: 20px 0;
+        }
+
+        input {
+            margin: 5px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🖥️ GSMED - {{ user.username }} ({{ user.role }})</h1>
+
+    {% if user.role == 'Admin' %}
+    <h2>➕ Novo Computador</h2>
+    <form action="/computadores" method="post">
+        Tag Interna: <input name="tag_interna" required><br>
+        Marca: <input name="marca" required><br>
+        Modelo: <input name="modelo" required><br>
+        CPU: <input name="cpu" required><br>
+        RAM (GB): <input name="ram_gb" type="number" required><br>
+        <button type="submit">Criar PC</button>
+    </form>
+    {% endif %}
+
+    <h2>🔍 Pesquisar Computadores</h2>
+    <a href="/computadores">Ver Todos</a> |
+    <a href="/computadores?ram_min=16&estado=EmUso">RAM ≥16GB em uso</a>
+
+    <script>
+        // Auto-reload lista a cada 30s
+        setTimeout(() => location.reload(), 30000);
+    </script>
+</body>
+</html>

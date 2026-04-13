@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Movimento Pontos</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            padding: 40px;
+        }
+
+        form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 400px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px;
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⚙ Movimento de Pontos</h1>
+
+    <form method="post">
+        <label>Colaborador</label>
+        <select name="user_id">
+            {% for u in users %}
+            <option value="{{ u.id }}">{{ u.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Tipo</label>
+        <select name="tipo">
+            <option value="positivo">Positivo</option>
+            <option value="negativo">Negativo</option>
+        </select>
+
+        <label>Pontos</label>
+        <input type="number" name="pontos" required>
+
+        <label>Motivo</label>
+        <input type="text" name="motivo" required>
+
+        <button type="submit">Guardar</button>
+    </form>
+
+</body>
+</html>

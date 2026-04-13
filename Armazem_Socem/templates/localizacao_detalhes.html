@@ -1,0 +1,125 @@
+﻿{% extends "base.html" %}
+{% block title %}{{ loc_nome }} - Itens{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-map-marker-alt me-2 text-warning"></i>{{ loc_nome }}</h1>
+        <a href="/localizacoes" class="btn btn-outline-secondary">
+            <i class="fas fa-list me-2"></i>Todas Localizações
+        </a>
+    </div>
+
+    <!-- FORM PROCURA -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control form-control-lg"
+                               placeholder="Procurar por Molde ou Peça (ex: ED26, 100)..."
+                               value="{{ search }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        {% if search %}
+                        <a href="/localizacoes/{{ loc_id }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Limpar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MOLDES -->
+    {% if moldes %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5><i class="fas fa-cubes me-2"></i>Moldes encontrados ({{ moldes|length }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Peças Totais</th>
+                            <th>QR</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for molde_id, nome, qr_codigo, num_pecas in moldes %}
+                        <tr>
+                            <td><strong>{{ nome }}</strong></td>
+                            <td><span class="badge bg-info">{{ num_pecas }}</span></td>
+                            <td>
+                                {% if qr_codigo %}
+                                <a href="/imprimir_qr/molde/{{ molde_id }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-qrcode"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/localizacoes/{{ loc_id }}?search={{ nome }}" class="btn btn-sm btn-info">
+                                    Ver Peças deste Molde
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="fas fa-search fa-2x mb-3 d-block"></i>
+        Nenhum molde encontrado. Procura por "ED26" ou clica "Limpar".
+    </div>
+    {% endif %}
+
+    <!-- PEÇAS -->
+    {% if pecas %}
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h5><i class="fas fa-boxes me-2"></i>Peças encontradas ({{ pecas|length }})</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Molde</th>
+                            <th>Nome Completo</th>
+                            <th>QR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for peca_id, codigo_peca, nome, qr_codigo, molde_nome in pecas %}
+                        <tr>
+                            <td><strong>{{ codigo_peca }}</strong></td>
+                            <td>{{ molde_nome }}</td>
+                            <td>{{ nome }}</td>
+                            <td>
+                                {% if qr_codigo %}
+                                <a href="/imprimir_qr/peca/{{ peca_id }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-qrcode"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+cd \Ferramentas_SOCEM\Visitas
+
+pip install pywin32
+pip install pillow qrcode[pil] reportlab
+
+
+uvicorn app:app --host 0.0.0.0 --port 8001 --reload

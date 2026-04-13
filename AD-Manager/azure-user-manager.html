@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AD User Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --border-bright: #2a4060;
+    --accent: #0078d4;
+    --accent2: #00b4d8;
+    --accent-glow: rgba(0,120,212,0.15);
+    --success: #00c896;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-mid: #94a3b8;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,120,212,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,120,212,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Layout ── */
+  .shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo .logo-mark {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .sidebar-logo h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .sidebar-logo h1 span { color: var(--accent); }
+
+  .sidebar-nav { padding: 16px 12px; flex: 1; }
+  .nav-section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 0 8px;
+    margin: 16px 0 8px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--text-mid);
+    transition: all 0.15s;
+    margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); border-color: var(--border); }
+  .nav-item.active {
+    background: var(--accent-glow);
+    color: var(--accent2);
+    border-color: rgba(0,180,216,0.2);
+  }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .tenant-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .tenant-badge strong { color: var(--success); display: block; font-size: 12px; margin-bottom: 2px; }
+
+  /* ── Main ── */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+
+  /* ── Topbar ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-title { font-size: 18px; font-weight: 600; }
+  .topbar-title span { color: var(--text-dim); font-weight: 300; margin-left: 8px; font-size: 14px; }
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    font-family: var(--sans);
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { background: #006cbe; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-mid);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); border-color: var(--border-bright); }
+  .btn-danger { background: transparent; color: var(--danger); border-color: rgba(239,68,68,0.3); }
+  .btn-danger:hover { background: rgba(239,68,68,0.08); }
+  .btn-success { background: var(--success); color: #000; font-weight: 600; }
+  .btn-success:hover { background: #00b085; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Content area ── */
+  .content { padding: 32px; max-width: 960px; }
+
+  /* ── Auth Panel ── */
+  .auth-panel {
+    max-width: 480px;
+    margin: 80px auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+  }
+  .auth-panel .ms-logo { font-size: 48px; margin-bottom: 20px; }
+  .auth-panel h2 { font-size: 22px; margin-bottom: 8px; }
+  .auth-panel p { color: var(--text-dim); font-size: 14px; margin-bottom: 28px; line-height: 1.6; }
+  .auth-scopes {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .auth-scopes p { color: var(--text-mid); font-size: 12px; margin-bottom: 8px; margin: 0 0 8px; }
+  .scope-tag {
+    display: inline-block;
+    background: var(--accent-glow);
+    border: 1px solid rgba(0,120,212,0.3);
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin: 3px 3px 0 0;
+  }
+
+  /* Config panel */
+  .config-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .config-panel h3 { font-size: 14px; color: var(--text-mid); margin-bottom: 16px; font-family: var(--mono); letter-spacing: 1px; }
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ── Form ── */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.3s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon {
+    width: 34px; height: 34px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(0,120,212,0.25);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .section-header h2 { font-size: 15px; font-weight: 600; }
+  .section-header p { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-family: var(--mono);
+  }
+  input, select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-size: 13.5px;
+    font-family: var(--sans);
+    transition: border-color 0.15s;
+    outline: none;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  select option { background: var(--surface2); }
+  input::placeholder { color: var(--text-dim); }
+
+  /* Toggle mode */
+  .mode-toggle {
+    display: flex;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 24px;
+    width: fit-content;
+  }
+  .mode-btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-dim);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: var(--sans);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .mode-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,120,212,0.4);
+  }
+
+  /* License grid */
+  .license-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .license-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .license-card:hover { border-color: var(--border-bright); background: #1f2f47; }
+  .license-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+  .license-card .lc-check {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border-bright);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    color: var(--accent2);
+    transition: all 0.15s;
+  }
+  .license-card.selected .lc-check { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .license-card .lc-name { font-size: 12.5px; font-weight: 500; line-height: 1.3; }
+  .license-card .lc-available { font-size: 11px; color: var(--text-dim); margin-top: 3px; font-family: var(--mono); }
+
+  /* Loading state */
+  .loading-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    padding: 6px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid var(--border-bright);
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Status / toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13.5px;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 380px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(0,200,150,0.4); }
+  .toast.error { border-color: rgba(239,68,68,0.4); }
+  .toast-icon { font-size: 18px; }
+
+  /* Tag */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+  .tag-green { background: rgba(0,200,150,0.12); color: var(--success); border: 1px solid rgba(0,200,150,0.25); }
+  .tag-blue { background: var(--accent-glow); color: var(--accent2); border: 1px solid rgba(0,180,216,0.25); }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* Results table */
+  .user-table { width: 100%; border-collapse: collapse; }
+  .user-table th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .user-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .user-table tr:hover td { background: var(--surface2); }
+  .user-table tr:last-child td { border-bottom: none; }
+  .user-avatar {
+    width: 32px; height: 32px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(0,120,212,0.3);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent2);
+  }
+
+  /* Pages */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Progress bar */
+  .progress-steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    flex: 1;
+  }
+  .step:not(:last-child)::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin: 0 8px;
+  }
+  .step .step-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .step.done .step-num { background: var(--success); border-color: var(--success); color: #000; }
+  .step.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .step.active { color: var(--text); }
+  .step.done { color: var(--success); }
+
+  /* Generated password */
+  .password-display {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+  .password-display code {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--accent2);
+    letter-spacing: 1px;
+  }
+
+  /* Info callout */
+  .callout {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+  .callout strong { color: var(--accent2); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">// AZURE</div>
+      <h1>AD <span>Manager</span></h1>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Gestão</div>
+      <div class="nav-item active" onclick="showPage('page-create')">
+        <span class="icon">➕</span> Criar Utilizador
+      </div>
+      <div class="nav-item" onclick="showPage('page-users')">
+        <span class="icon">👥</span> Utilizadores
+      </div>
+      <div class="nav-section-label">Sistema</div>
+      <div class="nav-item" onclick="showPage('page-config')">
+        <span class="icon">⚙️</span> Configuração
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="tenant-badge" id="tenant-display">
+        <strong id="tenant-name-display">—</strong>
+        <span id="auth-status-display">Não autenticado</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        Criar Utilizador <span id="topbar-sub">Novo ou por cópia</span>
+      </div>
+      <div class="topbar-actions">
+        <div id="auth-indicator" class="loading-badge" style="display:none">
+          <div class="spinner"></div> A autenticar...
+        </div>
+        <button class="btn btn-ghost" onclick="showPage('page-config')">⚙️ Configurar API</button>
+        <button class="btn btn-ghost" id="btn-sync" onclick="manualSync()" title="Forçar sincronização AD → M365">🔄 Sync AD</button>
+        <button class="btn btn-primary" id="btn-sign-in" onclick="signIn()">🔑 Ligar ao Azure</button>
+        <button class="btn btn-ghost" id="btn-sign-out" onclick="signOut()" style="display:none">🚪 Sair</button>
+      </div>
+    </div>
+
+    <!-- ── PAGE: CONFIG ── -->
+    <div id="page-config" class="page content">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">⚙️</div>
+          <div>
+            <h2>Configuração da Aplicação Azure</h2>
+            <p>Regista a app no Azure AD e preenche as credenciais</p>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-bottom:20px">
+          <strong>Como registar a aplicação no Azure:</strong><br>
+          1. Vai a <strong>portal.azure.com</strong> → Azure Active Directory → Registos de Aplicações<br>
+          2. Clica <strong>"+ Novo registo"</strong> → dá um nome → "Contas neste directório"<br>
+          3. Em <strong>URI de Redireccionamento</strong>: seleciona "SPA" e coloca <code style="color:var(--accent2)">&lt;URL desta página&gt;</code><br>
+          4. Copia o <strong>Application (client) ID</strong> e o <strong>Directory (tenant) ID</strong><br>
+          5. Em <strong>API permissions</strong>, adiciona: <code style="color:var(--accent2)">User.ReadWrite.All</code>, <code style="color:var(--accent2)">Group.ReadWrite.All</code>, <code style="color:var(--accent2)">Directory.ReadWrite.All</code>, <code style="color:var(--accent2)">Organization.Read.All</code> → Grant admin consent
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Client ID (Application ID)</label>
+            <input type="text" id="cfg-client-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label>Tenant ID (Directory ID)</label>
+            <input type="text" id="cfg-tenant-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+          </div>
+        </div>
+        <div style="margin-top:16px; display:flex; gap:10px">
+          <button class="btn btn-primary" onclick="saveConfig()">💾 Guardar Configuração</button>
+          <button class="btn btn-ghost" onclick="showPage('page-create')">← Voltar</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">🖥️</div>
+          <div>
+            <h2>AD Bridge Service — SRVH-DC01</h2>
+            <p>Ligação ao serviço local para gerir o Active Directory on-premises</p>
+          </div>
+        </div>
+        <div class="callout" style="margin-bottom:20px">
+          <strong>Como instalar:</strong><br>
+          1. Copia a pasta <strong>AD-Bridge</strong> para o <strong>SRVH-DC01</strong><br>
+          2. Edita o <strong>config.json</strong> com as credenciais do AD<br>
+          3. Corre o <strong>1_INSTALAR.bat</strong> como Administrador<br>
+          4. Preenche abaixo o endereço IP do SRVH-DC01 e clica "Testar Ligação"
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>URL do AD Bridge (IP do SRVH-DC01)</label>
+            <input type="text" id="cfg-bridge-url" placeholder="http://192.168.1.10:5000">
+          </div>
+          <div class="form-group">
+            <label>Chave API (opcional)</label>
+            <input type="text" id="cfg-bridge-key" placeholder="Deixa vazio se não configuraste">
+          </div>
+        </div>
+        <div style="margin-top:16px; display:flex; gap:10px; align-items:center">
+          <button class="btn btn-primary" onclick="saveBridgeConfig()">💾 Guardar</button>
+          <button class="btn btn-ghost" onclick="testBridgeConnection()">🔌 Testar Ligação</button>
+          <span id="bridge-test-result" style="font-size:13px;font-family:var(--mono)"></span>
+        </div>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px">
+        <span class="scope-tag">User.ReadWrite.All</span>
+        <span class="scope-tag">Group.ReadWrite.All</span>
+        <span class="scope-tag">Directory.ReadWrite.All</span>
+        <span class="scope-tag">Organization.Read.All</span>
+        <span class="scope-tag">AdministrativeUnit.ReadWrite.All</span>
+      </div>
+    </div>
+
+    <!-- ── PAGE: CREATE USER ── -->
+    <div id="page-create" class="page active content">
+
+      <!-- Steps -->
+      <div class="progress-steps" id="progress-steps">
+        <div class="step active" id="step-1"><div class="step-num">1</div> Modo</div>
+        <div class="step" id="step-2"><div class="step-num">2</div> Dados</div>
+        <div class="step" id="step-3"><div class="step-num">3</div> Licença</div>
+        <div class="step" id="step-4"><div class="step-num">4</div> Confirmar</div>
+      </div>
+
+      <!-- Mode selection -->
+      <div class="section" id="section-mode">
+        <div class="section-header">
+          <div class="section-icon">🎯</div>
+          <div><h2>Modo de Criação</h2><p>Cria de raiz ou copia um utilizador existente</p></div>
+        </div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="mode-new" onclick="setMode('new')">✨ Novo Utilizador</button>
+          <button class="mode-btn" id="mode-copy" onclick="setMode('copy')">📋 Copiar Utilizador</button>
+        </div>
+
+        <div id="copy-section" style="display:none">
+          <div class="form-group" style="max-width:400px">
+            <label>Utilizador a Copiar</label>
+            <div style="display:flex; gap:8px">
+              <input type="text" id="copy-search" placeholder="Pesquisar utilizador..." oninput="searchUsers(this.value)">
+              <button class="btn btn-ghost" onclick="searchUsers(document.getElementById('copy-search').value)" style="white-space:nowrap">🔍 Pesquisar</button>
+            </div>
+          </div>
+          <div id="copy-results" style="margin-top:12px"></div>
+          <div id="copy-selected" style="margin-top:12px; display:none">
+            <div class="callout">
+              ✅ A copiar de: <strong id="copy-user-name">—</strong> — grupos e propriedades serão replicados
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User data -->
+      <div class="section" id="section-data">
+        <div class="section-header">
+          <div class="section-icon">👤</div>
+          <div><h2>Dados do Utilizador</h2><p>Informação de identidade e conta</p></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nome Próprio *</label>
+            <input type="text" id="u-first" placeholder="João" oninput="autoFillFields()">
+          </div>
+          <div class="form-group">
+            <label>Apelido *</label>
+            <input type="text" id="u-last" placeholder="Silva" oninput="autoFillFields()">
+          </div>
+          <div class="form-group">
+            <label>Nome de Apresentação *</label>
+            <input type="text" id="u-display" placeholder="João Silva">
+          </div>
+          <div class="form-group">
+            <label>Username (UPN) *</label>
+            <div style="display:flex; align-items:center; gap:6px">
+              <input type="text" id="u-upn-prefix" placeholder="joao.silva" style="flex:1" oninput="updateUPN()">
+              <select id="u-upn-domain" onchange="updateUPN()" style="width:auto;min-width:160px;font-family:var(--mono);font-size:13px;color:var(--accent2);border-color:var(--border-bright)">
+                <option value="">@dominio.com</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Cargo / Função</label>
+            <input type="text" id="u-jobtitle" placeholder="Técnico de IT">
+          </div>
+          <div class="form-group">
+            <label>Departamento</label>
+            <input type="text" id="u-dept" placeholder="Tecnologias de Informação">
+          </div>
+          <div class="form-group">
+            <label>Empresa</label>
+            <input type="text" id="u-company" placeholder="Empresa XPTO Lda.">
+          </div>
+          <div class="form-group">
+            <label>Localização</label>
+            <input type="text" id="u-location" placeholder="Lisboa">
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="u-phone" placeholder="+351 21 000 0000">
+          </div>
+          <div class="form-group">
+            <label>Telemóvel</label>
+            <input type="text" id="u-mobile" placeholder="+351 91 000 0000">
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Unidade Organizacional (OU) — AD Local</label>
+            <div style="display:flex; gap:8px">
+              <select id="u-ou" onchange="updateOUDisplay()" style="flex:1">
+                <option value="OU=Users,OU=SOCEM,DC=corp,DC=socem,DC=pt">OU=Users,OU=SOCEM (padrão)</option>
+              </select>
+              <button class="btn btn-ghost" onclick="loadADOUs()" style="white-space:nowrap;font-size:12px" title="Carregar OUs do AD local">🔄 AD</button>
+            </div>
+            <div id="ad-bridge-status" style="font-size:11px;color:var(--text-dim);margin-top:4px;font-family:var(--mono)"></div>
+          </div>
+          <div class="form-group">
+            <label>Gestor / Manager</label>
+            <input type="text" id="u-manager-search" placeholder="Pesquisar gestor..." oninput="searchManager(this.value)">
+            <div id="manager-results" style="margin-top:4px"></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="margin-bottom:6px">
+          <label>Palavra-Passe Inicial *</label>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <input type="text" id="generated-password" placeholder="Palavra-passe..." style="flex:1; font-family:var(--mono); font-size:14px; letter-spacing:1px; color:var(--accent2);" oninput="updateReview()">
+          <button class="btn btn-ghost" onclick="generatePassword()" style="font-size:12px; white-space:nowrap">🔄 Gerar</button>
+          <button class="btn btn-ghost" onclick="togglePasswordVisibility()" id="btn-pwd-toggle" style="font-size:12px">👁️</button>
+        </div>
+        <div id="pwd-strength" style="font-size:11px; font-family:var(--mono); margin-top:4px; color:var(--text-dim)"></div>
+        <div style="margin-top:8px; display:flex; gap:16px; align-items:center">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; text-transform:none; font-size:13px; font-weight:400; color:var(--text-mid)">
+            <input type="checkbox" id="u-change-pwd" checked> Obrigar alteração no 1.º login
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; text-transform:none; font-size:13px; font-weight:400; color:var(--text-mid)">
+            <input type="checkbox" id="u-enabled" checked> Conta activa
+          </label>
+        </div>
+      </div>
+
+      <!-- License -->
+      <div class="section" id="section-license">
+        <div class="section-header">
+          <div class="section-icon">📦</div>
+          <div><h2>Licença Microsoft 365</h2><p>Seleciona a licença a atribuir ao utilizador</p></div>
+        </div>
+        <div id="license-loading" class="loading-badge">
+          <div class="spinner"></div> A carregar licenças disponíveis...
+        </div>
+        <div id="license-grid" class="license-grid" style="display:none"></div>
+        <div id="license-empty" style="display:none; color:var(--text-dim); font-size:13px">
+          ⚠️ Nenhuma licença disponível no tenant ou não autenticado.
+        </div>
+      </div>
+
+      <!-- Groups (copy mode) -->
+      <div class="section" id="section-groups" style="display:none">
+        <div class="section-header">
+          <div class="section-icon">👥</div>
+          <div><h2>Grupos a Copiar</h2><p>Grupos do utilizador de referência</p></div>
+        </div>
+        <div id="groups-list">Nenhum grupo carregado.</div>
+      </div>
+
+      <!-- Submit -->
+      <div class="section" id="section-submit">
+        <div class="section-header">
+          <div class="section-icon">✅</div>
+          <div><h2>Revisão e Criação</h2><p>Confirma e cria o utilizador</p></div>
+        </div>
+        <div id="review-content" style="color:var(--text-dim); font-size:13px">Preenche os dados acima para ver o resumo.</div>
+        <div class="divider"></div>
+        <div style="display:flex; gap:12px; align-items:center">
+          <button class="btn btn-success" onclick="createUser()" id="btn-create" disabled>🚀 Criar Utilizador no Azure AD</button>
+          <button class="btn btn-ghost" onclick="resetForm()">🔄 Limpar Formulário</button>
+          <span id="create-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: USERS ── -->
+    <div id="page-users" class="page content">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon">👥</div>
+          <div><h2>Utilizadores do Azure AD</h2><p>Lista de utilizadores no tenant</p></div>
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:16px">
+          <input type="text" id="users-search" placeholder="Pesquisar utilizadores..." style="max-width:300px" oninput="filterUsers(this.value)">
+          <button class="btn btn-ghost" onclick="loadUsers()">🔄 Actualizar</button>
+        </div>
+        <div id="users-loading" class="loading-badge" style="display:none">
+          <div class="spinner"></div> A carregar...
+        </div>
+        <div id="users-table-wrap">
+          <table class="user-table" id="users-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Nome</th>
+                <th>Email / UPN</th>
+                <th>Cargo</th>
+                <th>Estado</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+        <div id="users-empty" style="display:none; color:var(--text-dim); padding:20px; text-align:center">
+          Nenhum utilizador encontrado ou não autenticado.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">
+  <span class="toast-icon" id="toast-icon">✅</span>
+  <span id="toast-msg">Mensagem</span>
+</div>
+
+<!-- MSAL -->
+<script>
+(function() {
+  const urls = [
+    'https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js',
+    'https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js',
+    'https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js'
+  ];
+  let idx = 0;
+  function load() {
+    if (idx >= urls.length) { console.error('MSAL não carregou de nenhum CDN'); return; }
+    const s = document.createElement('script');
+    s.src = urls[idx++];
+    s.onerror = load;
+    document.head.appendChild(s);
+  }
+  load();
+})();
+</script>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let msalInstance = null;
+let currentAccount = null;
+let selectedMode = 'new';
+let selectedCopyUser = null;
+let selectedLicenses = [];
+let selectedManagerId = null;
+let copyUserGroups = [];
+let allOUs = [];
+let allLicenses = [];
+let allUsers = [];
+let tenantDomain = '';
+
+async function manualSync() {
+  const btn = document.getElementById('btn-sync');
+  btn.disabled = true;
+  btn.textContent = '⏳ A sincronizar...';
+  try {
+    const result = await bridgePost('/sync', {});
+    showToast('success', '🔄 ' + result.message);
+  } catch(e) {
+    showToast('error', '❌ Sync falhou: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Sync AD';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// AD BRIDGE
+// ═══════════════════════════════════════════════
+function getBridgeConfig() {
+  return {
+    url: localStorage.getItem('bridge_url') || '',
+    key: localStorage.getItem('bridge_key') || ''
+  };
+}
+
+function saveBridgeConfig() {
+  const url = document.getElementById('cfg-bridge-url').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('cfg-bridge-key').value.trim();
+  if (!url) { showToast('error', '⚠️ Introduz o URL do AD Bridge'); return; }
+  localStorage.setItem('bridge_url', url);
+  localStorage.setItem('bridge_key', key);
+  showToast('success', '✅ Configuração do AD Bridge guardada!');
+}
+
+async function bridgeGet(path) {
+  const cfg = getBridgeConfig();
+  if (!cfg.url) throw new Error('AD Bridge não configurado');
+  const headers = { 'Content-Type': 'application/json' };
+  if (cfg.key) headers['X-API-Key'] = cfg.key;
+  const resp = await fetch(cfg.url + path, { headers });
+  if (!resp.ok) { const e = await resp.json(); throw new Error(e.error || resp.statusText); }
+  return resp.json();
+}
+
+async function bridgePost(path, body) {
+  const cfg = getBridgeConfig();
+  if (!cfg.url) throw new Error('AD Bridge não configurado');
+  const headers = { 'Content-Type': 'application/json' };
+  if (cfg.key) headers['X-API-Key'] = cfg.key;
+  const resp = await fetch(cfg.url + path, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) { const e = await resp.json(); throw new Error(e.error || resp.statusText); }
+  return resp.json();
+}
+
+async function testBridgeConnection() {
+  const result = document.getElementById('bridge-test-result');
+  result.textContent = '⏳ A testar...';
+  result.style.color = 'var(--text-dim)';
+  try {
+    const data = await bridgeGet('/health');
+    result.textContent = `✅ Ligado — ${data.service} v${data.version}`;
+    result.style.color = 'var(--success)';
+    showToast('success', '✅ AD Bridge acessível no SRVH-DC01!');
+  } catch(e) {
+    result.textContent = `❌ ${e.message}`;
+    result.style.color = 'var(--danger)';
+    showToast('error', '❌ Não foi possível ligar ao AD Bridge: ' + e.message);
+  }
+}
+
+async function loadADOUs() {
+  const statusEl = document.getElementById('ad-bridge-status');
+  const sel = document.getElementById('u-ou');
+  statusEl.textContent = '⏳ A carregar OUs do AD...';
+  try {
+    const data = await bridgeGet('/ous');
+    const ous = data.ous || [];
+    if (ous.length === 0) {
+      statusEl.textContent = '⚠️ Nenhuma OU encontrada';
+      return;
+    }
+    sel.innerHTML = '';
+    ous.forEach(ou => {
+      const opt = document.createElement('option');
+      opt.value = ou.dn;
+      const parts = ou.dn.split(',').filter(p => p.startsWith('OU='));
+      const label = parts.map(p => p.replace('OU=', '')).join(' › ');
+      opt.textContent = label || ou.name;
+      opt.title = ou.dn;
+      sel.appendChild(opt);
+    });
+    const defaultOU = 'OU=Users,OU=SOCEM,DC=corp,DC=socem,DC=pt';
+    const defaultOpt = Array.from(sel.options).find(o => o.value === defaultOU);
+    if (defaultOpt) sel.value = defaultOU;
+    statusEl.textContent = `✅ ${ous.length} OUs carregadas do AD local`;
+    statusEl.style.color = 'var(--success)';
+  } catch(e) {
+    statusEl.textContent = `❌ AD Bridge: ${e.message} — configura em ⚙️`;
+    statusEl.style.color = 'var(--danger)';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+function loadConfig() {
+  return {
+    clientId: localStorage.getItem('az_client_id') || '',
+    tenantId: localStorage.getItem('az_tenant_id') || ''
+  };
+}
+
+async function saveConfig() {
+  const cid = document.getElementById('cfg-client-id').value.trim();
+  const tid = document.getElementById('cfg-tenant-id').value.trim();
+  if (!cid || !tid) { showToast('error', '⚠️ Preenche o Client ID e o Tenant ID'); return; }
+  localStorage.setItem('az_client_id', cid);
+  localStorage.setItem('az_tenant_id', tid);
+  showToast('success', '✅ Configuração guardada! Clica em "Ligar ao Azure".');
+  msalInstance = null;
+  await initMSAL();
+}
+
+async function initMSAL() {
+  const cfg = loadConfig();
+  if (!cfg.clientId || !cfg.tenantId) return null;
+  const msalConfig = {
+    auth: {
+      clientId: cfg.clientId,
+      authority: `https://login.microsoftonline.com/${cfg.tenantId}`,
+      redirectUri: window.location.origin + window.location.pathname
+    },
+    cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false }
+  };
+  try {
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+    const resp = await msalInstance.handleRedirectPromise();
+    if (resp) handleAuthResponse(resp);
+    else checkExistingSession();
+    return msalInstance;
+  } catch(e) {
+    console.error('MSAL init error:', e);
+    return null;
+  }
+}
+
+function checkExistingSession() {
+  if (!msalInstance) return;
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    currentAccount = accounts[0];
+    onAuthenticated();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+const SCOPES = [
+  'User.ReadWrite.All',
+  'Group.ReadWrite.All',
+  'Directory.ReadWrite.All',
+  'Organization.Read.All',
+  'AdministrativeUnit.ReadWrite.All'
+];
+
+async function waitForMSAL(timeout = 10000) {
+  const start = Date.now();
+  while (typeof msal === 'undefined') {
+    if (Date.now() - start > timeout) throw new Error('Biblioteca MSAL não carregou. Verifica a ligação à internet.');
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
+async function signIn() {
+  const cfg = loadConfig();
+  if (!cfg.clientId || !cfg.tenantId) {
+    showToast('error', '⚠️ Configura o Client ID e Tenant ID primeiro');
+    showPage('page-config');
+    return;
+  }
+  try {
+    document.getElementById('auth-indicator').style.display = 'flex';
+    await waitForMSAL();
+    if (!msalInstance) {
+      const inst = await initMSAL();
+      if (!inst) throw new Error('Não foi possível inicializar o MSAL. Verifica o Client ID e Tenant ID.');
+    }
+    const resp = await msalInstance.loginPopup({ scopes: SCOPES });
+    handleAuthResponse(resp);
+  } catch(e) {
+    document.getElementById('auth-indicator').style.display = 'none';
+    showToast('error', '❌ Erro na autenticação: ' + e.message);
+  }
+}
+
+function handleAuthResponse(resp) {
+  currentAccount = resp.account;
+  onAuthenticated();
+}
+
+async function onAuthenticated() {
+  document.getElementById('auth-indicator').style.display = 'none';
+  document.getElementById('btn-sign-in').style.display = 'none';
+  document.getElementById('btn-sign-out').style.display = 'flex';
+
+  const name = currentAccount.name || currentAccount.username;
+  document.getElementById('tenant-name-display').textContent = name;
+  document.getElementById('auth-status-display').textContent = '✅ Autenticado';
+  document.getElementById('btn-create').disabled = false;
+
+  showToast('success', `✅ Autenticado como ${name}`);
+  await loadTenantInfo();
+  await loadOUs();
+  await loadLicenses();
+  generatePassword();
+}
+
+function signOut() {
+  if (msalInstance) msalInstance.logoutPopup({ account: currentAccount });
+  currentAccount = null;
+  document.getElementById('btn-sign-in').style.display = 'flex';
+  document.getElementById('btn-sign-out').style.display = 'none';
+  document.getElementById('tenant-name-display').textContent = '—';
+  document.getElementById('auth-status-display').textContent = 'Não autenticado';
+  document.getElementById('btn-create').disabled = true;
+}
+
+async function getToken() {
+  if (!msalInstance || !currentAccount) throw new Error('Não autenticado');
+  const r = await msalInstance.acquireTokenSilent({ scopes: SCOPES, account: currentAccount });
+  return r.accessToken;
+}
+
+async function graphGet(endpoint) {
+  const token = await getToken();
+  const resp = await fetch('https://graph.microsoft.com/v1.0' + endpoint, {
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }
+  });
+  if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || resp.statusText); }
+  return resp.json();
+}
+
+async function graphPost(endpoint, body) {
+  const token = await getToken();
+  const resp = await fetch('https://graph.microsoft.com/v1.0' + endpoint, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || resp.statusText); }
+  return resp.status === 204 ? null : resp.json();
+}
+
+async function graphPatch(endpoint, body) {
+  const token = await getToken();
+  const resp = await fetch('https://graph.microsoft.com/v1.0' + endpoint, {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || resp.statusText); }
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+// TENANT INFO
+// ═══════════════════════════════════════════════
+let tenantDomains = [];
+
+async function loadTenantInfo() {
+  try {
+    const org = await graphGet('/organization');
+    if (org.value && org.value.length > 0) {
+      const domains = org.value[0].verifiedDomains;
+      // Guarda todos os domínios verificados (excluindo os .onmicrosoft.com)
+      tenantDomains = domains
+        .filter(d => !d.name.endsWith('.onmicrosoft.com'))
+        .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)); // default primeiro
+
+      // Se não há domínios sem onmicrosoft, inclui todos
+      if (tenantDomains.length === 0) {
+        tenantDomains = [...domains].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+      }
+
+      // Popula o select de domínios
+      const sel = document.getElementById('u-upn-domain');
+      sel.innerHTML = '';
+      tenantDomains.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name;
+        opt.textContent = '@' + d.name;
+        if (d.isDefault) opt.selected = true;
+        sel.appendChild(opt);
+      });
+
+      // Atualiza tenantDomain para o domínio padrão (compat. com getUPN)
+      tenantDomain = tenantDomains.find(d => d.isDefault)?.name || tenantDomains[0]?.name || '';
+      updateUPN();
+    }
+  } catch(e) { console.warn('loadTenantInfo', e); }
+}
+
+// ═══════════════════════════════════════════════
+// OUs
+// ═══════════════════════════════════════════════
+async function loadOUs() {
+  await loadADOUs();
+}
+
+// ═══════════════════════════════════════════════
+// LICENSES
+// ═══════════════════════════════════════════════
+const LICENSE_NAMES = {
+  'SPE_E3':'Microsoft 365 E3','SPE_E5':'Microsoft 365 E5','O365_BUSINESS_PREMIUM':'Microsoft 365 Business Premium',
+  'O365_BUSINESS_ESSENTIALS':'Microsoft 365 Business Basic','O365_BUSINESS':'Microsoft 365 Apps for Business',
+  'ENTERPRISEPACK':'Office 365 E3','ENTERPRISEPREMIUM':'Office 365 E5','DESKLESSPACK':'Office 365 F3',
+  'FLOW_FREE':'Power Automate Free','POWER_BI_STANDARD':'Power BI Free','POWER_BI_PRO':'Power BI Pro',
+  'TEAMS_FREE':'Microsoft Teams Free','VISIOCLIENT':'Visio Plan 2','PROJECTPREMIUM':'Project Plan 5',
+  'EMS':'Enterprise Mobility + Security E3','EMSPREMIUM':'Enterprise Mobility + Security E5',
+  'AAD_PREMIUM':'Azure AD Premium P1','AAD_PREMIUM_P2':'Azure AD Premium P2',
+  'INTUNE_A':'Intune','WIN10_PRO_ENT_SUB':'Windows 10/11 Enterprise E3'
+};
+
+async function loadLicenses() {
+  document.getElementById('license-loading').style.display = 'flex';
+  document.getElementById('license-grid').style.display = 'none';
+  document.getElementById('license-empty').style.display = 'none';
+  try {
+    const data = await graphGet('/subscribedSkus');
+    allLicenses = (data.value || []).filter(l => l.capabilityStatus === 'Enabled');
+    renderLicenses();
+  } catch(e) {
+    document.getElementById('license-loading').style.display = 'none';
+    document.getElementById('license-empty').style.display = 'block';
+  }
+}
+
+function renderLicenses() {
+  document.getElementById('license-loading').style.display = 'none';
+  const grid = document.getElementById('license-grid');
+  if (allLicenses.length === 0) {
+    document.getElementById('license-empty').style.display = 'block';
+    return;
+  }
+  grid.style.display = 'grid';
+  grid.innerHTML = '';
+  allLicenses.forEach(lic => {
+    const avail = lic.prepaidUnits.enabled - lic.consumedUnits;
+    const name = LICENSE_NAMES[lic.skuPartNumber] || lic.skuPartNumber;
+    const card = document.createElement('div');
+    card.className = 'license-card';
+    card.dataset.skuId = lic.skuId;
+    card.dataset.skuPart = lic.skuPartNumber;
+    card.innerHTML = `
+      <div class="lc-check" id="lc-check-${lic.skuId}"></div>
+      <div>
+        <div class="lc-name">${name}</div>
+        <div class="lc-available">${avail} disponíveis</div>
+      </div>`;
+    card.onclick = () => toggleLicense(lic.skuId, lic.skuPartNumber, card);
+    grid.appendChild(card);
+  });
+}
+
+function toggleLicense(skuId, skuPart, card) {
+  const idx = selectedLicenses.findIndex(l => l.skuId === skuId);
+  if (idx >= 0) {
+    selectedLicenses.splice(idx, 1);
+    card.classList.remove('selected');
+    document.getElementById('lc-check-' + skuId).textContent = '';
+  } else {
+    selectedLicenses.push({ skuId, skuPart });
+    card.classList.add('selected');
+    document.getElementById('lc-check-' + skuId).textContent = '✓';
+  }
+  updateReview();
+}
+
+// ═══════════════════════════════════════════════
+// FORM HELPERS
+// ═══════════════════════════════════════════════
+function autoFillFields() {
+  const first = document.getElementById('u-first').value.trim();
+  const last = document.getElementById('u-last').value.trim();
+  if (first || last) {
+    document.getElementById('u-display').value = [first, last].filter(Boolean).join(' ');
+    const prefix = [first, last].filter(Boolean).join('.').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9.]/g, '');
+    document.getElementById('u-upn-prefix').value = prefix;
+    updateUPN();
+  }
+  updateReview();
+}
+
+function updateUPN() {
+  updateReview();
+}
+
+function getUPN() {
+  const prefix = document.getElementById('u-upn-prefix').value.trim();
+  const domain = document.getElementById('u-upn-domain').value || tenantDomain;
+  return prefix && domain ? prefix + '@' + domain : '';
+}
+
+function generatePassword() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const special = '!@#$%&*';
+  let pw = '';
+  for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+  pw += special[Math.floor(Math.random() * special.length)];
+  pw += Math.floor(Math.random() * 9);
+  pw = pw.split('').sort(() => Math.random() - 0.5).join('');
+  const el = document.getElementById('generated-password');
+  el.value = pw;
+  el.type = 'text';
+  document.getElementById('btn-pwd-toggle').textContent = '🙈';
+  checkPasswordStrength(pw);
+  updateReview();
+}
+
+function togglePasswordVisibility() {
+  const el = document.getElementById('generated-password');
+  const btn = document.getElementById('btn-pwd-toggle');
+  if (el.type === 'password') {
+    el.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    el.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
+
+function checkPasswordStrength(pw) {
+  const el = document.getElementById('pwd-strength');
+  if (!pw) { el.textContent = ''; return; }
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = ['', '🔴 Muito fraca', '🟠 Fraca', '🟡 Razoável', '🟢 Boa', '🟢 Forte', '🟢 Muito forte'];
+  el.textContent = levels[Math.min(score, 6)];
+  el.style.color = score < 3 ? 'var(--danger)' : score < 5 ? 'var(--warning)' : 'var(--success)';
+}
+
+function setMode(mode) {
+  selectedMode = mode;
+  document.getElementById('mode-new').classList.toggle('active', mode === 'new');
+  document.getElementById('mode-copy').classList.toggle('active', mode === 'copy');
+  document.getElementById('copy-section').style.display = mode === 'copy' ? 'block' : 'none';
+  document.getElementById('section-groups').style.display = mode === 'copy' && copyUserGroups.length ? 'block' : 'none';
+  if (mode === 'new') {
+    selectedCopyUser = null;
+    copyUserGroups = [];
+    document.getElementById('copy-selected').style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// USER SEARCH (copy)
+// ═══════════════════════════════════════════════
+async function searchUsers(q) {
+  if (!q || q.length < 2 || !currentAccount) return;
+  try {
+    const data = await graphGet(`/users?$filter=startswith(displayName,'${encodeURIComponent(q)}') or startswith(userPrincipalName,'${encodeURIComponent(q)}')&$select=id,displayName,userPrincipalName,jobTitle&$top=8`);
+    const div = document.getElementById('copy-results');
+    if (!data.value || data.value.length === 0) { div.innerHTML = '<p style="color:var(--text-dim);font-size:13px">Nenhum utilizador encontrado.</p>'; return; }
+    div.innerHTML = `<table class="user-table"><thead><tr><th>Nome</th><th>UPN</th><th>Cargo</th><th></th></tr></thead><tbody>
+      ${data.value.map(u => `<tr>
+        <td>${u.displayName}</td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--text-dim)">${u.userPrincipalName}</td>
+        <td>${u.jobTitle || '—'}</td>
+        <td><button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="selectCopyUser('${u.id}','${u.displayName.replace(/'/g,"\\'")}','${u.userPrincipalName}')">Selecionar</button></td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  } catch(e) { showToast('error', 'Erro: ' + e.message); }
+}
+
+async function selectCopyUser(id, name, upn) {
+  selectedCopyUser = { id, name, upn };
+  document.getElementById('copy-user-name').textContent = name;
+  document.getElementById('copy-selected').style.display = 'block';
+  document.getElementById('copy-results').innerHTML = '';
+
+  const sam = upn.split('@')[0];
+
+  // ── Grupos M365 com paginação completa ──────────────────
+  let azureGroups = [];
+  try {
+    let url = `/users/${id}/memberOf?$select=id,displayName,groupTypes,mail&$top=100`;
+    while (url) {
+      const data = await graphGet(url);
+      const groups = (data.value || []).filter(g => g['@odata.type'] === '#microsoft.graph.group');
+      azureGroups = azureGroups.concat(groups);
+      // Paginação — nextLink vem com URL completo, precisa de remover o base
+      const next = data['@odata.nextLink'];
+      url = next ? next.replace('https://graph.microsoft.com/v1.0', '') : null;
+    }
+  } catch(e) { console.warn('Azure groups:', e); }
+
+  // ── Grupos AD local via Bridge ───────────────────────────
+  let adGroups = [];
+  let adProps = {};
+  try {
+    const bridgeCfg = getBridgeConfig();
+    if (bridgeCfg.url) {
+      const data = await bridgeGet(`/users/groups?sam=${encodeURIComponent(sam)}`);
+      adGroups = data.groups || [];
+      adProps = data.properties || {};
+    }
+  } catch(e) { console.warn('AD Bridge groups:', e); }
+
+  // Grupos AD (com DN para adicionar no AD local)
+  // Grupos M365 (com id para adicionar via Graph) — TODOS, sem excluir por nome
+  copyUserGroups = [
+    ...adGroups.map(g => ({ dn: g.dn, displayName: g.name, source: 'AD' })),
+    ...azureGroups.map(g => ({ id: g.id, displayName: g.displayName, mail: g.mail || '', source: 'M365' }))
+  ];
+
+  if (copyUserGroups.length > 0) {
+    document.getElementById('section-groups').style.display = 'block';
+    const adTags = adGroups.map(g =>
+      `<span class="tag tag-green" style="margin:3px" title="${g.dn}">🖥️ ${g.name}</span>`
+    ).join('');
+    const m365Tags = azureGroups.map(g =>
+      `<span class="tag tag-blue" style="margin:3px" title="${g.mail || g.id}">☁️ ${g.displayName}</span>`
+    ).join('');
+    document.getElementById('groups-list').innerHTML =
+      (adTags ? `<div style="margin-bottom:10px"><span style="font-size:11px;color:var(--text-dim);font-family:var(--mono);display:block;margin-bottom:6px">🖥️ AD LOCAL (${adGroups.length})</span>${adTags}</div>` : '') +
+      (m365Tags ? `<div><span style="font-size:11px;color:var(--text-dim);font-family:var(--mono);display:block;margin-bottom:6px">☁️ MICROSOFT 365 (${azureGroups.length})</span>${m365Tags}</div>` : '<div style="color:var(--text-dim);font-size:12px">Nenhum grupo M365 encontrado.</div>');
+  }
+
+  try {
+    const u = await graphGet(`/users/${id}?$select=jobTitle,department,companyName,officeLocation,businessPhones,mobilePhone,city`);
+    if (adProps.title || u.jobTitle) document.getElementById('u-jobtitle').value = adProps.title || u.jobTitle || '';
+    if (adProps.department || u.department) document.getElementById('u-dept').value = adProps.department || u.department || '';
+    if (adProps.company || u.companyName) document.getElementById('u-company').value = adProps.company || u.companyName || '';
+    if (adProps.city || u.city) document.getElementById('u-location').value = adProps.city || u.city || '';
+    if (adProps.phone) document.getElementById('u-phone').value = adProps.phone;
+    if (adProps.mobile) document.getElementById('u-mobile').value = adProps.mobile;
+  } catch(e) { console.warn('Copy props:', e); }
+}
+
+// ═══════════════════════════════════════════════
+// MANAGER SEARCH
+// ═══════════════════════════════════════════════
+let managerTimeout;
+function searchManager(q) {
+  clearTimeout(managerTimeout);
+  if (!q || q.length < 2) { document.getElementById('manager-results').innerHTML = ''; return; }
+  managerTimeout = setTimeout(async () => {
+    try {
+      const data = await graphGet(`/users?$filter=startswith(displayName,'${encodeURIComponent(q)}')&$select=id,displayName,userPrincipalName&$top=5`);
+      const div = document.getElementById('manager-results');
+      div.innerHTML = (data.value || []).map(u =>
+        `<div style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-top:4px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center"
+          onclick="setManager('${u.id}','${u.displayName.replace(/'/g,"\\'")}')">
+          <span>${u.displayName}</span>
+          <span style="font-size:11px;color:var(--text-dim);font-family:var(--mono)">${u.userPrincipalName}</span>
+        </div>`
+      ).join('');
+    } catch(e) {}
+  }, 400);
+}
+
+function setManager(id, name) {
+  selectedManagerId = id;
+  document.getElementById('u-manager-search').value = name;
+  document.getElementById('manager-results').innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════
+// REVIEW
+// ═══════════════════════════════════════════════
+function updateReview() {
+  const display = document.getElementById('u-display').value;
+  const upn = getUPN();
+  const job = document.getElementById('u-jobtitle').value;
+  const dept = document.getElementById('u-dept').value;
+  const ou = document.getElementById('u-ou');
+  const ouName = ou.options[ou.selectedIndex]?.text || 'Nenhuma';
+  const licNames = selectedLicenses.map(l => LICENSE_NAMES[l.skuPart] || l.skuPart).join(', ') || 'Nenhuma';
+
+  document.getElementById('review-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+      <div><span style="color:var(--text-dim)">Nome:</span> <strong>${display || '—'}</strong></div>
+      <div><span style="color:var(--text-dim)">UPN:</span> <strong style="font-family:var(--mono)">${upn || '—'}</strong></div>
+      <div><span style="color:var(--text-dim)">Cargo:</span> ${job || '—'}</div>
+      <div><span style="color:var(--text-dim)">Departamento:</span> ${dept || '—'}</div>
+      <div><span style="color:var(--text-dim)">OU:</span> ${ouName}</div>
+      <div><span style="color:var(--text-dim)">Licenças:</span> <span style="color:var(--accent2)">${licNames}</span></div>
+      ${selectedMode === 'copy' && selectedCopyUser ? `<div style="grid-column:1/-1"><span style="color:var(--text-dim)">Copiar de:</span> <span class="tag tag-blue">${selectedCopyUser.name}</span> (${copyUserGroups.length} grupos)</div>` : ''}
+    </div>`;
+}
+
+function updateOUDisplay() { updateReview(); }
+
+// ═══════════════════════════════════════════════
+// CREATE USER
+// ═══════════════════════════════════════════════
+async function createUser() {
+  if (!currentAccount) { showToast('error', '❌ Não autenticado no Azure'); return; }
+
+  const display = document.getElementById('u-display').value.trim();
+  const upnPrefix = document.getElementById('u-upn-prefix').value.trim();
+  const first = document.getElementById('u-first').value.trim();
+  const last = document.getElementById('u-last').value.trim();
+
+  if (!display || !upnPrefix) { showToast('error', '⚠️ Nome e username são obrigatórios'); return; }
+
+  const upn = upnPrefix + '@' + (document.getElementById('u-upn-domain').value || tenantDomain);
+  const sam = upnPrefix;
+  const password = document.getElementById('generated-password').value.trim();
+  if (!password) { showToast('error', '⚠️ Define uma palavra-passe antes de criar'); return; }
+  const enabled = document.getElementById('u-enabled').checked;
+  const changePwd = document.getElementById('u-change-pwd').checked;
+  const ouDN = document.getElementById('u-ou').value || 'OU=Users,OU=SOCEM,DC=corp,DC=socem,DC=pt';
+
+  const btn = document.getElementById('btn-create');
+  btn.disabled = true;
+
+  const bridgeCfg = getBridgeConfig();
+  const hasBridge = !!bridgeCfg.url;
+  let azureUser = null;
+
+  try {
+    // ── PASSO 1: Criar no AD local via Bridge ──────────────
+    if (hasBridge) {
+      btn.textContent = '⏳ 1/3 A criar no AD local...';
+      const adBody = {
+        sAMAccountName: sam,
+        displayName: display,
+        firstName: first,
+        lastName: last,
+        upn: upn,
+        password: password,
+        ou: ouDN,
+        enabled: enabled,
+        forceChangePassword: changePwd,
+        jobTitle: document.getElementById('u-jobtitle').value,
+        department: document.getElementById('u-dept').value,
+        company: document.getElementById('u-company').value,
+        city: document.getElementById('u-location').value,
+        phone: document.getElementById('u-phone').value,
+        mobile: document.getElementById('u-mobile').value,
+        email: upn,
+        groups: copyUserGroups.filter(g => g.source === 'AD' && g.dn).map(g => g.dn)
+      };
+      const adResult = await bridgePost('/users', adBody);
+      showToast('success', `✅ Utilizador criado no AD: ${adResult.dn}`);
+      if (adResult.groupsAdded && adResult.groupsAdded.length > 0) {
+        showToast('success', `✅ Adicionado a ${adResult.groupsAdded.length} grupos do AD`);
+      }
+    } else {
+      // ── Sem Bridge: criar directamente no Azure AD via Graph ──
+      btn.textContent = '⏳ 1/2 A criar no Azure AD...';
+      try {
+        const newUser = await graphPost('/users', {
+          accountEnabled: enabled,
+          displayName: display,
+          givenName: first,
+          surname: last,
+          userPrincipalName: upn,
+          mailNickname: sam,
+          passwordProfile: { forceChangePasswordNextSignIn: changePwd, password: password },
+          jobTitle: document.getElementById('u-jobtitle').value || undefined,
+          department: document.getElementById('u-dept').value || undefined,
+          companyName: document.getElementById('u-company').value || undefined,
+          city: document.getElementById('u-location').value || undefined,
+          businessPhones: document.getElementById('u-phone').value ? [document.getElementById('u-phone').value] : [],
+          mobilePhone: document.getElementById('u-mobile').value || undefined,
+          usageLocation: 'PT'
+        });
+        azureUser = newUser;
+        showToast('success', `✅ Utilizador criado directamente no Azure AD!`);
+      } catch(e) {
+        showToast('error', '❌ Falha ao criar no Azure AD: ' + e.message);
+        throw e;
+      }
+    }
+
+    // ── PASSO 2: Aguardar sync (só com Bridge) ──────────────
+    if (hasBridge) {
+      btn.textContent = '⏳ 2/3 A sincronizar com o M365...';
+      showToast('success', '🔄 Sincronização Delta iniciada pelo AD Bridge...');
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 15000));
+        try {
+          const found = await graphGet(`/users?$filter=userPrincipalName eq '${upn}'&$select=id,displayName`);
+          if (found.value && found.value.length > 0) {
+            azureUser = found.value[0];
+            showToast('success', `✅ Utilizador sincronizado no M365!`);
+            break;
+          }
+        } catch(e) {}
+        if (i < 19) showToast('success', `⏳ A aguardar sync... (tentativa ${i+2}/20 — máx. 5 min)`);
+      }
+      if (!azureUser) {
+        showToast('error', '⚠️ Sync ainda a decorrer — licença e grupos serão aplicados quando aparecer no M365');
+      } else {
+        // Aguarda mais 20s para o Exchange reconhecer o utilizador como recipient
+        btn.textContent = '⏳ 2/3 A aguardar provisionamento Exchange...';
+        showToast('success', '⏳ A aguardar Exchange ficar pronto (20s)...');
+        await new Promise(r => setTimeout(r, 20000));
+      }
+    }
+
+    // ── Definir usageLocation ───────────────────────────────
+    if (azureUser) {
+      try {
+        await graphPatch(`/users/${azureUser.id}`, { usageLocation: 'PT' });
+        showToast('success', '✅ Usage location definida para PT');
+      } catch(e) {
+        console.warn('usageLocation:', e.message);
+      }
+    }
+
+    // ── PASSO 3a: Grupos M365 — PRIMEIRO que a licença ──────
+    // (grupos não dependem de Exchange, licença sim)
+    const m365Groups = copyUserGroups.filter(g => g.source === 'M365' && g.id);
+    if (m365Groups.length > 0) {
+      if (azureUser) {
+        btn.textContent = `⏳ A adicionar a ${m365Groups.length} grupos M365...`;
+        let ok = 0, fail = 0;
+        for (const g of m365Groups) {
+          try {
+            await graphPost(`/groups/${g.id}/members/$ref`, {
+              '@odata.id': `https://graph.microsoft.com/v1.0/directoryObjects/${azureUser.id}`
+            });
+            ok++;
+          } catch(e) {
+            // 409 = já é membro — não é erro
+            if (e.message?.includes('One or more added object references already exist') ||
+                e.message?.includes('already exist') || e.message?.includes('409')) {
+              ok++;
+            } else {
+              console.warn(`Grupo M365 "${g.displayName}":`, e.message);
+              fail++;
+            }
+          }
+        }
+        showToast('success', `✅ Grupos M365: ${ok} adicionados${fail > 0 ? `, ${fail} falharam` : ''}`);
+      } else {
+        showToast('error', `⚠️ ${m365Groups.length} grupos M365 não aplicados — utilizador não sincronizou a tempo`);
+      }
+    }
+
+    // ── PASSO 3b: Atribuir licença ──────────────────────────
+    // Aguarda que o Exchange reconheça o utilizador como recipient
+    // (proxyAddresses preenchidas = Exchange pronto)
+    if (azureUser && selectedLicenses.length > 0) {
+      btn.textContent = '⏳ 3/3 A verificar provisionamento Exchange...';
+
+      // Verifica se o Exchange já reconhece o utilizador (até 3 minutos extra)
+      let exchangeReady = false;
+      for (let check = 0; check < 12; check++) {
+        try {
+          const uCheck = await graphGet(`/users/${azureUser.id}?$select=id,proxyAddresses,assignedLicenses,mail`);
+          // Exchange pronto quando tem proxyAddresses ou mail preenchido
+          if ((uCheck.proxyAddresses && uCheck.proxyAddresses.length > 0) || uCheck.mail) {
+            exchangeReady = true;
+            showToast('success', '✅ Exchange pronto — a atribuir licença...');
+            break;
+          }
+        } catch(e) {}
+        if (check < 11) {
+          btn.textContent = `⏳ 3/3 A aguardar Exchange... (${check+1}/12)`;
+          await new Promise(r => setTimeout(r, 15000));
+        }
+      }
+
+      if (!exchangeReady) {
+        // Exchange ainda não pronto — atribui na mesma mas com aviso
+        showToast('success', '⚠️ Exchange ainda a provisionar — a atribuir licença mesmo assim...');
+      }
+
+      btn.textContent = '⏳ 3/3 A atribuir licença...';
+      for (const lic of selectedLicenses) {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            await graphPost(`/users/${azureUser.id}/assignLicense`, {
+              addLicenses: [{ skuId: lic.skuId, disabledPlans: [] }],
+              removeLicenses: []
+            });
+            showToast('success', `✅ Licença ${LICENSE_NAMES[lic.skuPart] || lic.skuPart} atribuída!`);
+            break;
+          } catch(e) {
+            if (attempt < 2) {
+              showToast('success', `⏳ Licença: a aguardar... (tentativa ${attempt+2}/3)`);
+              await new Promise(r => setTimeout(r, 20000));
+            } else {
+              showToast('error', `⚠️ Licença ${LICENSE_NAMES[lic.skuPart] || lic.skuPart}: ${e.message}`);
+            }
+          }
+        }
+      }
+    } else if (!azureUser && selectedLicenses.length > 0) {
+      showToast('error', '⚠️ Licença não atribuída — utilizador não apareceu no M365 após sync');
+    }
+
+    // ── Definir manager ─────────────────────────────────────
+    if (azureUser && selectedManagerId) {
+      try {
+        await graphPost(`/users/${azureUser.id}/manager/$ref`, {
+          '@odata.id': `https://graph.microsoft.com/v1.0/users/${selectedManagerId}`
+        });
+        showToast('success', '✅ Manager definido');
+      } catch(e) { console.warn('Manager:', e); }
+    }
+
+    showToast('success', `🎉 Concluído! ${display} criado${azureUser ? ' e configurado no M365' : ' no AD — aguarda sync'}`);
+    setTimeout(() => { resetForm(); }, 3000);
+
+  } catch(e) {
+    showToast('error', '❌ Erro: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🚀 Criar Utilizador no Azure AD';
+  }
+}
+
+function resetForm() {
+  document.getElementById('generated-password').value = '';
+  document.getElementById('pwd-strength').textContent = '';
+  ['u-first','u-last','u-display','u-upn-prefix','u-jobtitle','u-dept','u-company','u-location','u-phone','u-mobile','u-manager-search','copy-search'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  selectedCopyUser = null;
+  selectedLicenses = [];
+  selectedManagerId = null;
+  copyUserGroups = [];
+  document.getElementById('copy-selected').style.display = 'none';
+  document.getElementById('copy-results').innerHTML = '';
+  document.getElementById('manager-results').innerHTML = '';
+  document.getElementById('section-groups').style.display = 'none';
+  document.getElementById('groups-list').innerHTML = '';
+  document.querySelectorAll('.license-card').forEach(c => {
+    c.classList.remove('selected');
+    const id = c.dataset.skuId;
+    const chk = document.getElementById('lc-check-' + id);
+    if (chk) chk.textContent = '';
+  });
+  setMode('new');
+  generatePassword();
+  updateReview();
+  const btn = document.getElementById('btn-create');
+  btn.textContent = '🚀 Criar Utilizador no Azure AD';
+  btn.disabled = !currentAccount;
+}
+
+// ═══════════════════════════════════════════════
+// USERS LIST
+// ═══════════════════════════════════════════════
+async function loadUsers() {
+  if (!currentAccount) { showToast('error', '❌ Autentica primeiro'); return; }
+  document.getElementById('users-loading').style.display = 'flex';
+  document.getElementById('users-empty').style.display = 'none';
+  try {
+    const data = await graphGet('/users?$select=id,displayName,userPrincipalName,jobTitle,accountEnabled&$top=100&$orderby=displayName');
+    allUsers = data.value || [];
+    renderUsers(allUsers);
+  } catch(e) {
+    showToast('error', 'Erro ao carregar: ' + e.message);
+  }
+  document.getElementById('users-loading').style.display = 'none';
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('users-tbody');
+  if (!users.length) {
+    document.getElementById('users-empty').style.display = 'block';
+    tbody.innerHTML = '';
+    return;
+  }
+  document.getElementById('users-empty').style.display = 'none';
+  tbody.innerHTML = users.map(u => {
+    const initials = (u.displayName || '?').split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+    return `<tr>
+      <td><div class="user-avatar">${initials}</div></td>
+      <td><strong>${u.displayName}</strong></td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--text-dim)">${u.userPrincipalName}</td>
+      <td style="color:var(--text-mid)">${u.jobTitle || '—'}</td>
+      <td><span class="tag ${u.accountEnabled ? 'tag-green' : ''}" style="${!u.accountEnabled ? 'background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25)' : ''}">${u.accountEnabled ? '● Activo' : '○ Inactivo'}</span></td>
+      <td><button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="copyUserToForm('${u.id}','${u.displayName.replace(/'/g,"\\'")}','${u.userPrincipalName}')">📋 Copiar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterUsers(q) {
+  if (!q) { renderUsers(allUsers); return; }
+  const f = q.toLowerCase();
+  renderUsers(allUsers.filter(u => u.displayName?.toLowerCase().includes(f) || u.userPrincipalName?.toLowerCase().includes(f)));
+}
+
+function copyUserToForm(id, name, upn) {
+  showPage('page-create');
+  setMode('copy');
+  document.getElementById('copy-search').value = name;
+  selectCopyUser(id, name, upn);
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = { 'page-create': 0, 'page-users': 1, 'page-config': 2 };
+  const navItems = document.querySelectorAll('.nav-item');
+  const idx = map[id];
+  if (idx !== undefined && navItems[idx]) navItems[idx].classList.add('active');
+  const titles = { 'page-create': 'Criar Utilizador', 'page-users': 'Utilizadores', 'page-config': 'Configuração' };
+  document.querySelector('.topbar-title').childNodes[0].textContent = titles[id] || '';
+  if (id === 'page-users' && currentAccount) loadUsers();
+  if (id === 'page-config') {
+    const cfg = loadConfig();
+    document.getElementById('cfg-client-id').value = cfg.clientId;
+    document.getElementById('cfg-tenant-id').value = cfg.tenantId;
+    const bcfg = getBridgeConfig();
+    document.getElementById('cfg-bridge-url').value = bcfg.url;
+    document.getElementById('cfg-bridge-key').value = bcfg.key;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+let toastTimer;
+function showToast(type, msg) {
+  const t = document.getElementById('toast');
+  t.className = 'toast ' + type;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  generatePassword();
+  updateReview();
+  const cfg = loadConfig();
+  if (!cfg.clientId) {
+    setTimeout(() => showToast('error', '⚙️ Configura o Client ID e Tenant ID em "Configuração"'), 800);
+  } else {
+    await initMSAL();
+  }
+});
+</script>
+</body>
+</html>

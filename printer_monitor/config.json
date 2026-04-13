@@ -1,0 +1,37 @@
+{
+  "snmp_community": "public",
+  "threshold_pct": 15,
+
+  "email": {
+    "smtp_server": "smtp.office365.com",
+    "smtp_port": 587,
+    "username": "report.socem@socem.pt",
+    "password": "R3portS0c$m",
+    "from": "report.socem@socem.pt",
+    "to": [
+      "informatica@socem.pt"
+    ]
+  },
+
+  "printers": [
+    { "ip": "192.168.14.212", "name": "Septec Kyocera" },
+    { "ip": "192.168.13.199", "name": "ED Financeiro Kyo" },
+    { "ip": "192.168.13.204", "name": "ED Comercial Kyo" },
+    { "ip": "192.168.12.204", "name": "Compras Kyo 2554 CONTRATO" },
+    { "ip": "192.168.12.212", "name": "MS Velha Fabri Kyocera" },
+    { "ip": "192.168.12.201", "name": "ED Manutenção Epson" },
+    { "ip": "192.168.17.202", "name": "IN Kyo Fabricação" },
+    { "ip": "192.168.16.224", "name": "SP Engenharia Kyo" },
+    { "ip": "192.168.15.201", "name": "CE Fabri Samsung" },
+    { "ip": "192.168.15.207", "name": "CE Escri Kyo" },
+    { "ip": "192.168.20.204", "name": "Kyocera ECOSYS MA5500ifx KX CONTRATO" },
+    { "ip": "192.168.20.206", "name": "Kyocera TASKalfa 2554ci KX CONTRATO" },
+    { "ip": "192.168.11.209", "name": "Kyocera TASKalfa 2554ci KX CONTRATO" },
+    { "ip": "192.168.41.179", "name": "Kyocera Financeiro Contrato" },
+    { "ip": "192.168.41.181", "name": "Kyocera OpenSpace Contrato" },
+    { "ip": "192.168.41.185", "name": "Kyocera Qualidade Contrato" },
+    { "ip": "192.168.31.201", "name": "PM Producao Kyo Contrato" },
+    { "ip": "192.168.31.200", "name": "PM Comercial Kyo Contrato" },
+    { "ip": "192.168.31.199", "name": "PM Logistica Kyo (Cor) Contrato" }
+  ]
+}

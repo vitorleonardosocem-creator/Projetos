@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>🏢 Departamentos - WorkScore</title>
+    <style>
+        /* MODERN CSS - Gradientes + animações */
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gold: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+            --silver: linear-gradient(135deg, #c0c0c0 0%, #e5e5e5 100%);
+            --bronze: linear-gradient(135deg, #cd7f32 0%, #d4a017 100%);
+            --glass: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            padding: 2rem 0;
+        }
+
+            .sidebar h2 {
+                text-align: center;
+                color: #333;
+                margin: 0 0 2rem;
+                font-size: 1.8rem;
+            }
+
+        .menu-item {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            margin-bottom: 0.5rem;
+        }
+
+            .menu-item:hover {
+                background: var(--glass);
+                border-left-color: #667eea;
+                transform: translateX(10px);
+            }
+
+        .main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-10px);
+            }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+            margin: 0;
+        }
+
+        .stat-label {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        .depts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .dept-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .dept-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+                transition: left 0.5s;
+            }
+
+            .dept-card:hover::before {
+                left: 100%;
+            }
+
+            .dept-card:hover {
+                transform: translateY(-15px) scale(1.02);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            }
+
+        .dept-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            margin: 0 0 1rem;
+        }
+
+        .dept-stats {
+            color: rgba(255,255,255,0.9);
+            margin: 1rem 0;
+        }
+
+        .dept-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+            .dept-btn:hover {
+                background: #00d4d4;
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            }
+
+        .top-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow);
+        }
+
+        .top-1 {
+            background: var(--gold);
+        }
+
+        .top-2 {
+            background: var(--silver);
+        }
+
+        .top-3 {
+            background: var(--bronze);
+        }
+
+        .back {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            margin-top: 2rem;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 1rem 0;
+            }
+
+            .depts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>🏆 WorkScore SOCEM</h2>
+            <div class="menu-item" onclick="location.href='/'">📊 Dashboard</div>
+            <div class="menu-item" onclick="location.href='/colaborador'">👤 Colaboradores</div>
+            <div class="menu-item" onclick="location.href='/departamentos'">🏢 Departamentos</div>
+            <div class="menu-item" onclick="location.href='/admin-departamentos'">⚙️ Admin</div>
+        </div>
+        <div class="main">
+            <h1>🏢 Departamentos</h1>
+
+            <!-- Stats Globais -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_depts }}</div>
+                    <div class="stat-label">Departamentos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_users }}</div>
+                    <div class="stat-label">Colaboradores</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_pontos|round(0) }}</div>
+                    <div class="stat-label">Pontos Totais</div>
+                </div>
+            </div>
+
+            <!-- Lista Departamentos -->
+            <div class="depts-grid">
+                {% for dept in departamentos %}
+                <div class="dept-card {% if loop.index == 1 %}top-1{% elif loop.index == 2 %}top-2{% elif loop.index == 3 %}top-3{% endif %}">
+                    {% if loop.index <= 3 %}
+                    <div class="top-badge">#{{"🥇" if loop.index == 1 else "🥈" if loop.index == 2 else "🥉"}}</div>
+                    {% endif %}
+                    <div class="dept-name">🏢 {{ dept.nome }}</div>
+                    <div class="dept-stats">
+                        👥 {{ dept.total_users }} colaboradores<br>
+                        ⭐ {{ (dept.total_pontos or 0)|round(0) }} pontos ({{ "%.1f"|format((dept.media_pontos or 0)) }} médio)
+                    </div>
+                    <button class="dept-btn" onclick="location.href='/departamento/{{ dept.nome|urlencode }}'">
+                        👀 Ver Utilizadores
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+
+            <a href="/" class="back">⬅ Voltar ao Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

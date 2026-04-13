@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>👥 {{ nome_dept }} - WorkScore</title>
+    <style>
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --glass: rgba(255,255,255,0.1);
+            --shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            padding: 2rem 0;
+        }
+
+            .sidebar h2 {
+                text-align: center;
+                color: #333;
+                margin: 0 0 2rem;
+            }
+
+        .menu-item {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            margin-bottom: 0.5rem;
+        }
+
+            .menu-item:hover {
+                background: var(--glass);
+                border-left-color: #667eea;
+                transform: translateX(10px);
+            }
+
+        .main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .dept-stats {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-around;
+            margin: 1rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .users-table {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1.5rem 1rem;
+            text-align: left;
+            color: white;
+        }
+
+        th {
+            background: rgba(0,0,0,0.2);
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(0,0,0,0.1);
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.01);
+        }
+
+        .rank {
+            font-weight: bold;
+            font-size: 1.2rem;
+            width: 60px;
+        }
+
+        .points {
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .back {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            display: inline-block;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .stat-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>🏆 WorkScore SOCEM</h2>
+            <div class="menu-item" onclick="location.href='/'">📊 Dashboard</div>
+            <div class="menu-item" onclick="location.href='/departamentos'">🏢 Departamentos</div>
+        </div>
+        <div class="main">
+            <h1>👥 {{ nome_dept }}</h1>
+
+            <!-- Stats do Departamento -->
+            <div class="dept-stats">
+                <div class="stat-row">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ total_users }}</div>
+                        <div class="stat-label">Colaboradores</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ total_pontos|round(0) }}</div>
+                        <div class="stat-label">Pontos Totais</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ "%.1f"|format(media_pontos) }}</div>
+                        <div class="stat-label">Média por User</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela Usuários -->
+            {% if users_dept %}
+            <div class="users-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>👤 Colaborador</th>
+                            <th>⭐ Pontos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users_dept %}
+                        <tr>
+                            <td class="rank">{{ loop.index }}</td>
+                            <td>{{ user.nome }}</td>
+                            <td class="points">{{ (user.pontos_total or 0)|round(0) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; color: white; padding: 3rem; font-size: 1.5rem;">
+                🤷‍♂️ Ainda sem colaboradores neste departamento.
+            </div>
+            {% endif %}
+
+            <a href="/departamentos" class="back">⬅ Todos Departamentos</a>
+        </div>
+    </div>
+</body>
+</html>

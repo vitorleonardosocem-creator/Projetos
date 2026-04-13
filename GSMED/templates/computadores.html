@@ -1,0 +1,828 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>GSMED - Computadores</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar SIMPLES - 5 ITENS */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(145deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: white;
+            padding: 30px 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(102, 126, 234, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+            .sidebar h2 {
+                margin-bottom: 20px;
+                text-align: center;
+                font-size: 26px;
+                background: rgba(255,255,255,0.1);
+                padding: 15px;
+                border-radius: 16px;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+
+            .sidebar .user-profile {
+                background: rgba(255,255,255,0.15);
+                padding: 20px;
+                border-radius: 16px;
+                margin-bottom: 40px;
+                text-align: center;
+            }
+
+            .sidebar a {
+                display: flex;
+                align-items: center;
+                color: white;
+                text-decoration: none;
+                padding: 18px 20px;
+                margin: 12px 0;
+                border-radius: 12px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                font-weight: 500;
+                position: relative;
+                overflow: hidden;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+
+                .sidebar a::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+                    transition: left 0.5s;
+                }
+
+                .sidebar a:hover::before {
+                    left: 100%;
+                }
+
+                .sidebar a:hover {
+                    background: rgba(255,255,255,0.25);
+                    transform: translateX(10px) scale(1.02);
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+                }
+
+        /* Main content */
+        .main {
+            margin-left: 280px;
+            padding: 30px;
+            width: calc(100% - 280px);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 20px !important;
+            overflow-x: auto; /* 🆕 Scroll se muito largo */
+        }
+
+            .header h1 {
+                flex-shrink: 0 !important;
+                white-space: nowrap !important;
+                margin: 0 !important;
+            }
+
+        .user-info {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Filtros avançados */
+        .filters {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+            .filters select, .filters input {
+                padding: 15px 20px;
+                border: 2px solid #e1e5e9;
+                border-radius: 12px;
+                font-size: 14px;
+                transition: all 0.3s;
+                background: white;
+                font-weight: 500;
+            }
+
+                .filters input[type="number"] {
+                    min-width: 140px;
+                }
+
+                .filters select:focus, .filters input:focus {
+                    outline: none;
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                    transform: translateY(-2px);
+                }
+
+            .filters button {
+                padding: 15px 30px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 14px;
+                transition: all 0.3s;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            }
+
+                .filters button:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+                }
+
+        /* Tabela moderna */
+        .table-container {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+            max-height: 70vh;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 65vh;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1400px;
+        }
+
+        th, td {
+            padding: 20px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        th {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        tr {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+            tr:hover {
+                background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
+                transform: scale(1.01);
+                box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
+            }
+
+        /* Status badges */
+        .status {
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .emuso {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+
+        .stock {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+        }
+
+        .reparacao {
+            background: linear-gradient(135deg, #cce5ff, #a8d4ff);
+            color: #004085;
+        }
+
+        .abatido {
+            background: linear-gradient(135deg, #f8d7da, #ffaaa5);
+            color: #721c24;
+        }
+
+        /* Actions */
+        .actions {
+            white-space: nowrap;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        /* Info cards */
+        .info-card {
+            background: rgba(255,255,255,0.9);
+            padding: 25px;
+            border-radius: 16px;
+            margin-top: 25px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            border-top: 4px solid #667eea;
+        }
+
+        /* Responsivo */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 260px;
+            }
+
+            .main {
+                margin-left: 260px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 20px;
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        /* ÍCONE EDITAR (verde lapis) - MESMO TAMANHO */
+        .btn-editar, .btn-abater {
+            width: 70px !important; /* Largura fixa igual */
+            height: 32px !important; /* Altura fixa igual */
+            border: none !important;
+            border-radius: 8px !important;
+            font-size: 11px !important; /* Fonte menor */
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important; /* Centraliza texto+ícone */
+            transition: all 0.2s !important;
+            text-decoration: none !important;
+            gap: 2px !important; /* Espaço ícone-texto */
+            padding: 0 !important; /* Sem padding extra */
+            line-height: 1.2 !important;
+            overflow: hidden !important;
+        }
+
+        .btn-editar {
+            background: linear-gradient(135deg, #28a745, #20c997) !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3) !important;
+        }
+
+        .btn-abater {
+            background: linear-gradient(135deg, #dc3545, #e74c3c) !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3) !important;
+        }
+
+        .btn-editar:hover {
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
+        }
+
+        .btn-abater:hover {
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4) !important;
+        }
+
+        /* Ícones */
+        .btn-editar::before {
+            content: "✏️" !important;
+            font-size: 12px !important;
+        }
+
+        .btn-abater::before {
+            content: "❌" !important;
+            font-size: 12px !important;
+        }
+
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <h2>💻 GSMED v4.0</h2>
+            <div class="user-profile">
+                <p>👤 <strong>{{ user }}</strong></p>
+                <small style="opacity: 0.8;">SOCEM - SysAdmin</small>
+            </div>
+
+            <!-- UTILIZADORES -->
+            <a href="/utilizadores/novo" title="Criar novo utilizador">
+                ➕ Criar utilizador
+            </a>
+            <a href="/utilizadores" title="Lista de utilizadores">
+                📋 Utilizadores
+            </a>
+
+            <!-- NAVEGAÇÃO PRINCIPAL (estilo sidebar simples) -->
+            <a href="/empresas" title="Gestão de Empresas" style="background: rgba(255,255,255,0.2); font-weight: 600;">
+                🏢 Empresas
+            </a>
+            <a href="/departamentos" title="Gestão de Departamentos">
+                🏭 Departamentos
+            </a>
+            <a href="/computadores?user={{ user_param }}" title="Gestão de Computadores" style="background: rgba(255,255,255,0.25); font-weight: 700;">
+                💻 Computadores ({{ computadores|length }})
+            </a>
+
+            <!-- PC ACTIONS -->
+            <a href="/computadores/novo?user={{ user_param }}" title="Adicionar novo PC">
+                ➕ Adicionar PC
+            </a>
+            <!--<a href="/computadores?user={{ user_param }}" title="Ver todos os PCs">
+                📋 Todos ({{ computadores|length }})
+            </a> -->
+            <a href="/computadores?user={{ user_param }}&ram_min=16" title="PCs com RAM superior a 16GB">
+                💾 RAM > 16GB
+            </a>
+
+            <!-- EXPORT -->
+            <a href="/exportar?user={{ user_param }}" title="Exportar lista para Excel">
+                💾 Exportar Excel
+            </a>
+            <a href="/exportar_filtro?{{ request.query_string.decode() }}&user={{ user_param }}" title="Exportar PCs filtrados">
+                📊 Export Filtros
+            </a>
+
+            <!-- IMPORT -->
+            <a href="#" onclick="importarExcel(event)" title="Importar lista do Excel">
+                📥 Importar Excel
+            </a>
+
+            <!-- DASHBOARD E SAIR -->
+            <a href="/admin/dashboard" title="Dashboard administrativo">
+                📊 Dashboard
+            </a>
+            <a href="/" style="background: rgba(255,100,100,0.3); margin-top: 20px; color: #fff !important;">
+                🚪 Sair
+            </a>
+        </div>
+
+
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <div class="main">
+            <div class="header">
+                <h1 style="display: flex; align-items: center; gap: 15px; flex-wrap: nowrap;">
+                    Gestão de Computadores
+                    <span style="color: #667eea; font-weight: 700; font-size: 1.2em;">
+                        {{ total_items }} PC{{ 's' if total_items != 1 else '' }}
+                    </span>
+                    <span style="background: #d4edda; color: #000; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.95em; white-space: nowrap;">
+                        Em Uso: {{ resumo.emuso }}
+                    </span>
+                    <span style="background: #fff3cd; color: #000; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.95em; white-space: nowrap;">
+                        Stock: {{ resumo.stock }}
+                    </span>
+                    <span style="background: #f8d7da; color: #000; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.95em; white-space: nowrap;">
+                        Abatido: {{ resumo.abatido }}
+                    </span>
+                </h1>
+
+
+                <div class="user-info">
+                    {{ user }} | SOCEM
+                    <a href="/computadores?user={{ user_param }}" style="color: #dc3545; font-weight: 600;">
+                        🔄 Atualizar <span class="loading" style="display: none;"></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- FILTROS CORRIGIDOS -->
+            <div class="filters">
+                <form id="filtrosForm" style="display: contents;">
+                    <select name="empresa" onchange="filtrar()" title="Filtrar por Empresa">
+                        <option value="">🏢 Todas Empresas</option>
+                        {% for emp in empresas %}
+                        <option value="{{ emp.id }}" {% if filtros_ativos.empresa==emp.id|string %}selected{% endif %}>
+                            {{ emp.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="departamento" onchange="filtrar()" title="Filtrar por Departamento">
+                        <option value="">🏭 Todos Departamentos</option>
+                        {% for dept in departamentos %}
+                        <option value="{{ dept.id }}" {% if filtros_ativos.departamento==dept.id|string %}selected{% endif %}>
+                            {{ dept.nome }} ({{ dept.empresa_nome }})
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="estado" onchange="filtrar()" title="Filtrar por Estado">
+                        <option value="">📊 Todos Estados</option>
+                        <option value="emuso" {% if filtros_ativos.estado=='emuso' %}selected{% endif %}>✅ Em Uso</option>
+                        <option value="stock" {% if filtros_ativos.estado=='stock' %}selected{% endif %}>📦 Stock</option>
+
+                        <option value="abatido" {% if filtros_ativos.estado=='abatido' %}selected{% endif %}>❌ Abatido</option>
+                    </select>
+
+                    <input type="text" name="cpu" id="cpu" placeholder="🔍 Procurar CPU..."
+                           value="{{ filtros_ativos.cpu or '' }}"
+                           onkeypress="if(event.key==='Enter') filtrar();"
+                           title="Pesquisar por modelo de CPU">
+
+                    <input type="text" name="gpu" id="gpu" placeholder="🔍 Procurar GPU..."
+                           value="{{ filtros_ativos.gpu or '' }}"
+                           onkeypress="if(event.key==='Enter') filtrar();"
+                           title="Pesquisar por placa gráfica">
+
+                    <input type="text" name="utilizador" id="utilizador" placeholder="Procurar Utilizador..."
+                           value="{{ filtros_ativos.utilizador or '' }}"
+                           onkeypress="if(event.key==='Enter') filtrar()"
+                           title="Pesquisar por nome do utilizador">
+
+
+                    <input type="number" name="ram_min" id="ram" placeholder="RAM mín."
+                           min="1" max="128" step="4"
+                           value="{{ filtros_ativos.ram_min or '' }}"
+                           onkeypress="if(event.key==='Enter') filtrar();"
+                           title="Filtrar RAM mínima (GB)">
+
+                    <button type="button" onclick="limparFiltros()" title="Limpar todos os filtros">
+                        🧹 Limpar
+                    </button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>🏷️ Tag</th>
+                                <th>📱 Tipo</th>
+                                <th>👤 User</th>
+                                <th>🧠 CPU</th>
+                                <th>💾 RAM</th>
+                                <th>🎮 GPU</th>
+                                <th>🛠️ Format.</th>
+                                <th>🔧 Manut.</th>
+                                <th>💽 Disco</th>
+                                <th>🖥️ SO</th>
+                                <th>🖥️ AnyDesk</th>
+                                <th>🌐 Hostname</th>
+                                <th>📝 Obs.</th>
+                                <th>🏢 Empresa</th>
+                                <th>🏭 Dept.</th>
+                                <th>📊 Estado</th>
+                                <th>📅 Aquisição</th>
+                                <th style="width: 160px;">⚡ Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pc in computadores %}
+                            <tr>
+                                <td><strong style="color: #667eea; font-family: monospace;">{{ pc.TagInterna or 'N/A' }}</strong></td>
+                                <td>{{ pc.TipoPC or '-' }}</td>
+                                <td>{{ pc.Utilizador or '-' }}</td>
+                                <td style="font-family: 'Courier New', monospace; font-size: 13px;">{{ pc.CPU or '-' }}</td>
+                                <td><strong style="color: #28a745;">{{ pc.RAM_GB or '-' }} GB</strong></td>
+                                <td>{{ pc.GPU or '-' }}</td>
+                                <td style="font-size: 12px;">{{ pc.DataFormatacaoFormatada or '—' }}</td>
+                                <td style="font-size: 12px;">{{ pc.DataManutencaoFormatada or '—' }}</td>
+                                <td><strong style="color: #17a2b8;">{{ pc.CapDisco_GB or '-' }} GB</strong></td>
+                                <td style="font-family: monospace;">{{ pc.SO or '-' }}</td>
+                                <td style="font-family: monospace; font-size: 12px;">{{ pc.Anydesk or '-' }}</td>
+                                <td style="font-family: monospace;">{{ pc.Hostname or '-' }}</td>
+                                <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ pc.Observacoes or '-' }}">{{ pc.Observacoes or '-' }}</td>
+                                <td>{{ pc.EmpresaNome or pc.IdEmpresa or '-' }}</td>
+                                <td>{{ pc.DepartamentoNome or pc.IdDepartamento or '-' }}</td>
+                                <td>
+                                    <span class="status {{ (pc.Estado or '').lower().replace(' ', '') }}">
+                                        {{ pc.Estado or '-' }}
+                                    </span>
+                                </td>
+                                <td style="font-size: 12px;">
+                                    {% if pc.DataAquisicaoFormatada %}
+                                    {{ pc.DataAquisicaoFormatada }}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                                <td class="actions" style="white-space: nowrap; gap: 6px; display: flex;">
+                                    <!-- EDITAR -->
+                                    <a href="/computadores/{{ pc.IdPC }}/editar?user={{ user }}" class="btn-status btn-editar" title="Editar {{ pc.TagInterna }}">
+                                        Editar
+                                    </a>
+
+                                    <!-- ABATER -->
+                                    <form method="POST" action="/computadores/{{ pc.IdPC }}/eliminar" style="display: contents;">
+                                        <input type="hidden" name="user" value="{{ user }}">
+                                        <button type="submit" class="btn-status btn-abater" title="Abater {{ pc.TagInterna }}"
+                                                onclick="return confirm('Abater {{ pc.TagInterna }}?')">
+                                            Abater
+                                        </button>
+                                    </form>
+                                </td>
+
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 🆕 PAGINAÇÃO -->
+            {% if total_pages > 1 %}
+            <div class="pagination" style="
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    padding: 20px;
+    border-radius: 20px;
+    margin: 20px 0;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+">
+                <div style="color: #666; font-size: 14px;">
+                    Mostrando {{ ((page-1)*per_page + 1)|int }} - {% if page*per_page|int < total_items %}{{ page*per_page|int }}{% else %}{{ total_items }}{% endif %} de {{ total_items }} registos
+
+                    (Página {{ page }} de {{ total_pages }})
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    {% if has_prev %}
+                    <a href="?user={{ user_param }}&view={{ view }}&page={{ prev_page }}{% for k,v in request.query_params.items() if k != 'page' %}&{{ k }}={{ v }}{% endfor %}"
+                       style="padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 12px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+                        ← Anterior
+                    </a>
+                    {% endif %}
+
+                    <span style="padding: 12px 20px; background: rgba(102,126,234,0.1); border-radius: 12px; font-weight: 600; color: #667eea;">
+                        Página {{ page }}
+                    </span>
+
+                    {% if has_next %}
+                    <a href="?user={{ user_param }}&view={{ view }}&page={{ next_page }}{% for k,v in request.query_params.items() if k != 'page' %}&{{ k }}={{ v }}{% endfor %}"
+                       style="padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 12px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+                        Próxima →
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+
+
+            {% if computadores %}
+            <div class="info-card">
+                🕐 <strong>Última atualização:</strong> {{ "now"|strftime("%d/%m/%Y %H:%M") }} |
+                📊 <strong>Total:</strong> {{ computadores|length }} registos ativos
+                {% if filtros_ativos %}
+                | 🔍 Filtros aplicados: {{ filtros_ativos|length }}
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="info-card" style="text-align: center;">
+                <h3>📭 Nenhum registo encontrado</h3>
+                <p>Aplique filtros ou adicione o primeiro PC</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SCRIPT OTIMIZADO -->
+    <script>
+        function construirUrlFiltros() {
+            const formData = new FormData(document.getElementById('filtrosForm'));
+            const params = new URLSearchParams();
+            const userParam = '{{ user_param }}';
+
+            for (let [key, value] of formData.entries()) {
+                if (value && value.trim()) {
+                    params.append(key, value.trim());
+                }
+            }
+
+            let url = `/computadores?user=${userParam}&page=1`;  // 🆕 Reset para página 1
+            if (params.toString()) {
+                url += '&' + params.toString();
+            }
+            return url;
+        }
+
+
+        function filtrar() {
+            const url = construirUrlFiltros();
+            window.location.href = url;
+        }
+
+        function limparFiltros() {
+            if (confirm('🧹 Limpar todos os filtros?')) {
+                window.location.href = `/computadores?user={{ user_param }}`;
+            }
+        }
+
+        // Auto-save filtros no localStorage
+        window.addEventListener('load', function() {
+            const filtros = {{ filtros_ativos|tojson }};
+            localStorage.setItem('gsmed_filtros', JSON.stringify(filtros));
+        });
+
+        // Debounce para inputs de texto
+        let timeout;
+        document.querySelectorAll('.filters input[type="text"]').forEach(input => {
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(filtrar, 800);
+            });
+        });
+
+        // Auto-refresh por inatividade (5min)
+        let inactivityTimer;
+        function resetTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                if (confirm('🔄 Atualizar lista (5min sem atividade)?')) {
+                    window.location.reload();
+                }
+            }, 300000); // 5 minutos
+        }
+        resetTimer();
+        document.addEventListener('mousemove', resetTimer);
+        document.addEventListener('keypress', resetTimer);
+        document.addEventListener('scroll', resetTimer);
+
+        async function importarExcel(event) {
+            event.preventDefault();
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.xlsx';
+            fileInput.onchange = async function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('user', '{{ user }}');  // User atual
+
+                try {
+                    const response = await fetch('/importar', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (response.ok) {
+                        alert('✅ Importado com sucesso! Recarregando...');
+                        location.reload();
+                    } else {
+                        alert('❌ Erro no import');
+                    }
+                } catch (err) {
+                    alert('❌ Erro de rede');
+                }
+            };
+            fileInput.click();
+        }
+
+
+    </script>
+</body>
+</html>

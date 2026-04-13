@@ -1,0 +1,258 @@
+{
+  "192.168.14.212|TK-5280CS": {
+    "alerted": false,
+    "level_pct": 56.0
+  },
+  "192.168.14.212|TK-5280MS": {
+    "alerted": false,
+    "level_pct": 70.0
+  },
+  "192.168.14.212|TK-5280YS": {
+    "alerted": false,
+    "level_pct": 64.0
+  },
+  "192.168.14.212|TK-5280KS": {
+    "alerted": false,
+    "level_pct": 57.0
+  },
+  "192.168.13.199|TK-8525C": {
+    "alerted": true,
+    "level_pct": 5.0
+  },
+  "192.168.13.199|TK-8525M": {
+    "alerted": false,
+    "level_pct": 28.0
+  },
+  "192.168.13.199|TK-8525Y": {
+    "alerted": false,
+    "level_pct": 69.0
+  },
+  "192.168.13.199|TK-8525K": {
+    "alerted": false,
+    "level_pct": 74.0
+  },
+  "192.168.13.204|TK-5280CS": {
+    "alerted": true,
+    "level_pct": 7.0
+  },
+  "192.168.13.204|TK-5280M": {
+    "alerted": false,
+    "level_pct": 86.0
+  },
+  "192.168.13.204|TK-5280Y": {
+    "alerted": false,
+    "level_pct": 80.0
+  },
+  "192.168.13.204|TK-5280K": {
+    "alerted": false,
+    "level_pct": 67.0
+  },
+  "192.168.12.204|TK-8365C": {
+    "alerted": false,
+    "level_pct": 77.0
+  },
+  "192.168.12.204|TK-8365M": {
+    "alerted": false,
+    "level_pct": 76.0
+  },
+  "192.168.12.204|TK-8365Y": {
+    "alerted": false,
+    "level_pct": 76.0
+  },
+  "192.168.12.204|TK-8365K": {
+    "alerted": false,
+    "level_pct": 87.0
+  },
+  "192.168.12.212|TK-1260": {
+    "alerted": false,
+    "level_pct": 88.0
+  },
+  "192.168.12.201|Black Ink Bottle": {
+    "alerted": true,
+    "level_pct": 3.0
+  },
+  "192.168.12.201|Cyan Ink Bottle": {
+    "alerted": false,
+    "level_pct": 31.0
+  },
+  "192.168.12.201|Magenta Ink Bottle": {
+    "alerted": false,
+    "level_pct": 49.0
+  },
+  "192.168.12.201|Yellow Ink Bottle": {
+    "alerted": false,
+    "level_pct": 36.0
+  },
+  "192.168.17.202|TK-7105": {
+    "alerted": false,
+    "level_pct": 42.0
+  },
+  "192.168.16.224|TK-5240C": {
+    "alerted": false,
+    "level_pct": 66.0
+  },
+  "192.168.16.224|TK-5240M": {
+    "alerted": false,
+    "level_pct": 75.0
+  },
+  "192.168.16.224|TK-5240Y": {
+    "alerted": false,
+    "level_pct": 85.0
+  },
+  "192.168.16.224|TK-5240K": {
+    "alerted": false,
+    "level_pct": 42.0
+  },
+  "192.168.15.201|Black Toner Cartridge S/N:CRUM-23101930570": {
+    "alerted": false,
+    "level_pct": 93.0
+  },
+  "192.168.15.207|TK-5280C": {
+    "alerted": false,
+    "level_pct": 28.0
+  },
+  "192.168.15.207|TK-5280M": {
+    "alerted": false,
+    "level_pct": 41.0
+  },
+  "192.168.15.207|TK-5280Y": {
+    "alerted": false,
+    "level_pct": 40.0
+  },
+  "192.168.15.207|TK-5280K": {
+    "alerted": false,
+    "level_pct": 55.0
+  },
+  "192.168.20.204|TK-3430": {
+    "alerted": false,
+    "level_pct": 84.0
+  },
+  "192.168.20.206|TK-8365C": {
+    "alerted": false,
+    "level_pct": 80.0
+  },
+  "192.168.20.206|TK-8365M": {
+    "alerted": false,
+    "level_pct": 32.0
+  },
+  "192.168.20.206|TK-8365Y": {
+    "alerted": true,
+    "level_pct": 5.0
+  },
+  "192.168.20.206|TK-8365K": {
+    "alerted": false,
+    "level_pct": 65.0
+  },
+  "192.168.11.209|TK-8365C": {
+    "alerted": false,
+    "level_pct": 95.0
+  },
+  "192.168.11.209|TK-8365M": {
+    "alerted": false,
+    "level_pct": 92.0
+  },
+  "192.168.11.209|TK-8365Y": {
+    "alerted": false,
+    "level_pct": 65.0
+  },
+  "192.168.11.209|TK-8365K": {
+    "alerted": false,
+    "level_pct": 78.0
+  },
+  "192.168.41.179|TK-5205C": {
+    "alerted": false,
+    "level_pct": 65.0
+  },
+  "192.168.41.179|TK-5205M": {
+    "alerted": false,
+    "level_pct": 73.0
+  },
+  "192.168.41.179|TK-5205Y": {
+    "alerted": false,
+    "level_pct": 70.0
+  },
+  "192.168.41.179|TK-5205K": {
+    "alerted": false,
+    "level_pct": 30.0
+  },
+  "192.168.41.181|TK-5205C": {
+    "alerted": false,
+    "level_pct": 48.0
+  },
+  "192.168.41.181|TK-5205M": {
+    "alerted": false,
+    "level_pct": 64.0
+  },
+  "192.168.41.181|TK-5205Y": {
+    "alerted": false,
+    "level_pct": 64.0
+  },
+  "192.168.41.181|TK-5205K": {
+    "alerted": false,
+    "level_pct": 56.0
+  },
+  "192.168.41.185|TK-8365C": {
+    "alerted": false,
+    "level_pct": 81.0
+  },
+  "192.168.41.185|TK-8365M": {
+    "alerted": true,
+    "level_pct": 10.0
+  },
+  "192.168.41.185|TK-8365Y": {
+    "alerted": false,
+    "level_pct": 32.0
+  },
+  "192.168.41.185|TK-8365K": {
+    "alerted": false,
+    "level_pct": 86.0
+  },
+  "192.168.31.201|TK-5205C": {
+    "alerted": false,
+    "level_pct": 26.0
+  },
+  "192.168.31.201|TK-5205M": {
+    "alerted": false,
+    "level_pct": 26.0
+  },
+  "192.168.31.201|TK-5205Y": {
+    "alerted": false,
+    "level_pct": 22.0
+  },
+  "192.168.31.201|TK-5205K": {
+    "alerted": true,
+    "level_pct": 5.0
+  },
+  "192.168.31.200|TK-5205C": {
+    "alerted": false,
+    "level_pct": 83.0
+  },
+  "192.168.31.200|TK-5205M": {
+    "alerted": false,
+    "level_pct": 85.0
+  },
+  "192.168.31.200|TK-5205Y": {
+    "alerted": false,
+    "level_pct": 85.0
+  },
+  "192.168.31.200|TK-5205K": {
+    "alerted": false,
+    "level_pct": 51.0
+  },
+  "192.168.31.199|TK-8365C": {
+    "alerted": false,
+    "level_pct": 93.0
+  },
+  "192.168.31.199|TK-8365M": {
+    "alerted": false,
+    "level_pct": 100.0
+  },
+  "192.168.31.199|TK-8365Y": {
+    "alerted": false,
+    "level_pct": 75.0
+  },
+  "192.168.31.199|TK-8365K": {
+    "alerted": false,
+    "level_pct": 22.0
+  }
+}

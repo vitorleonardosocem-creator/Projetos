@@ -1,0 +1,88 @@
+﻿{% extends "base.html" %}
+{% block title %}Moldes Finalizados{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">⚠️ Moldes Finalizados</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary">← Dashboard</a>
+    </div>
+</div>
+
+<!-- Form Pesquisa -->
+<div class="card mb-4 shadow">
+    <div class="card-body">
+        <form method="GET">
+            <div class="input-group">
+                <input type="text" class="form-control" name="search"
+                       placeholder="Procurar por nome, ID ou QR..."
+                       value="{{ search or '' }}">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">🔍 Procurar</button>
+                    {% if search %}
+                    <a href="{{ url_for('moldes_finalizados') }}" class="btn btn-outline-secondary">Limpar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabela Moldes Finalizados -->
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-danger">
+            {{ moldes|length }} Molde(s) Finalizado(s)
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>QR Code</th>
+                        <th>Total Peças</th>
+                        <th>Últ. Mov.</th>
+                        <th>Observações</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if moldes %}
+                    {% for molde in moldes %}
+                    <tr>
+                        <td><strong>{{ molde[0] }}</strong></td>
+                        <td>{{ molde[1] }}</td>
+                        <td><code>{{ molde[2] }}</code></td>
+                        <td><span class="badge badge-warning">{{ molde[6] }}</span></td>
+                        <td>{{ molde[5].strftime('%d/%m/%Y') if molde[5] else '-' }}</td>
+                        <td>{{ molde[3][:50] }}{% if molde[3]|length > 50 %}...{% endif %}</td>
+                        <td>
+                            <a href="/molde/visualizar/{{ molde[0] }}" class="btn btn-sm btn-outline-info">Ver</a>
+                            <form method="POST" action="/molde/reativar/{{ molde[0] }}"
+                                  style="display:inline;" onsubmit="return confirm('Reativar este molde e todas as peças?')">
+                                <button type="submit" class="btn btn-sm btn-success">✅ Reativar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            {% if search %}Nenhum molde encontrado com "{{ search }}"{% else %}Sem moldes finalizados{% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Link Rápido -->
+<div class="mt-4">
+    <a href="/moldes" class="btn btn-outline-primary">← Ver Todos Moldes</a>
+</div>
+{% endblock %}

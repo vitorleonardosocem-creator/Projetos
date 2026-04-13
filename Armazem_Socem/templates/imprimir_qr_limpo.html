@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>QR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: white;
+        }
+
+        img {
+            width: 180px !important;
+            height: 180px !important;
+            image-rendering: crisp-edges;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            img {
+                visibility: visible;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            @page {
+                margin: 0;
+                size: 100mm 100mm;
+            }
+        }
+    </style>
+    <script>
+        window.onload = function() {
+            window.print();
+        };
+        window.onafterprint = function() {
+            // ✅ Volta à página exata de origem
+            if ('{{ origem }}') {
+                window.location.href = decodeURIComponent('{{ origem }}');
+            } else {
+                window.close();
+            }
+        };
+    </script>
+</head>
+<body>
+    <img src="/{{ qr_path }}" alt="QR">
+</body>
+</html>

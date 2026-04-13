@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Imprimir {{ codigo }}</title>
+    <style>
+        @media print {
+            body {
+                margin: 0;
+            }
+
+            iframe {
+                width: 100%;
+                height: 100vh;
+                border: none;
+            }
+
+            button {
+                display: none;
+            }
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial;
+        }
+
+        iframe {
+            width: 100%;
+            height: 80vh;
+            border: 2px solid #007bff;
+        }
+
+        .controls {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            margin: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+            border: none;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #007bff;">📍 {{ nome }}</h1>
+    <iframe src="{{ barcode_url }}"></iframe>
+
+    <div class="controls">
+        <button class="btn btn-success" onclick="window.open('{{ barcode_url }}', '_blank')">📥 Download PDF</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-secondary" onclick="window.close()">❌ Fechar</button>
+    </div>
+
+    <script>
+        // Auto-download
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.href = '{{ barcode_url }}';
+            link.download = 'barcode_{{ codigo }}.pdf';
+            link.click();
+        }, 2000);
+    </script>
+</body>
+</html>

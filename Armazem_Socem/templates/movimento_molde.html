@@ -1,0 +1,118 @@
+﻿{% extends "base.html" %}
+{% block title %}Mover Molde{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    
+
+    <div class="container mt-4">
+        <!-- 🔙 BOTÃO VOLTAR (Role-Based) -->
+        <div class="row mb-4">
+            <div class="col-12">
+                {% if session.user_tipo == 'operador' %}
+                <a href="/dashboard_operador" class="btn btn-outline-primary btn-lg shadow-sm mb-3">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar Menu Operador
+                </a>
+                {% else %}
+                <a href="/" class="btn btn-outline-secondary btn-lg shadow-sm mb-3">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar Dashboard Admin
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        
+       
+
+        <h2>📱 Mover Molde (Scanner LIVE)</h2>
+        <div class="alert alert-info">
+            <strong>💡 Dica:</strong> Molde <strong>Finalizado</strong> move <strong>automaticamente</strong> as peças associadas!
+        </div>
+
+        <form method="post">
+            <div class="row g-3">
+                <!-- QR MOLDE -->
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">QR do Molde <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="text" id="qr_molde_result" name="qr_molde" class="form-control" readonly
+                               placeholder="M-001 | ED26M4002" autofocus required>
+                        <button type="button" onclick="scanMoldeLive()" class="btn btn-success">
+                            🔴 LIVE QR Molde
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LOCALIZAÇÃO -->
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Barcode Localização <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="text" id="barcode_local_result" name="barcode_localizacao" class="form-control" readonly
+                               placeholder="LOC001" required>
+                        <button type="button" onclick="scanLocalLive()" class="btn btn-warning">
+                            🔵 LIVE Barcode Loc
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success btn-lg w-100 px-5">
+                        🚚 Mover
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- DIV SCANNER -->
+        <div class="col-12 mt-4">
+            <div id="reader" style="width:100%; height:350px; border:3px solid #28a745; border-radius:10px; display:none;"></div>
+        </div>
+
+        <!-- Info Molde -->
+        <div id="infoMolde" class="mt-3 alert alert-secondary" style="display:none;">
+            <strong id="moldeNome"></strong> | Estado: <span id="moldeEstado" class="badge badge-info"></span>
+        </div>
+    </div>
+
+    <!-- SCRIPT SCANNER -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        const html5QrCode = new Html5Qrcode("reader");
+
+        async function scanMoldeLive() {
+            document.getElementById('reader').style.display = 'block';
+            document.getElementById('qr_molde_result').focus();
+
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 15, qrbox: { width: 300, height: 300 } },
+                (result) => {
+                    document.getElementById('qr_molde_result').value = result;
+                    html5QrCode.stop().then(clearScanner);
+                    document.getElementById('barcode_local_result').focus();  // Próximo
+                    alert('✅ Molde: ' + result);
+                },
+                () => { }
+            ).catch(() => alert('Flag ativa? chrome://flags → Insecure origins → teu IP'));
+        }
+
+        async function scanLocalLive() {
+            document.getElementById('reader').style.display = 'block';
+            document.getElementById('barcode_local_result').focus();
+
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 15, qrbox: { width: 300, height: 300 } },
+                (result) => {
+                    document.getElementById('barcode_local_result').value = result;
+                    html5QrCode.stop().then(clearScanner);
+                    alert('✅ Local: ' + result);
+                },
+                () => { }
+            ).catch(() => alert('Flag ativa?'));
+        }
+
+        function clearScanner() {
+            document.getElementById('reader').style.display = 'none';
+        }
+    </script>
+    {% endblock %}

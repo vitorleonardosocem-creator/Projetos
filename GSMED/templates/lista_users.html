@@ -1,0 +1,196 @@
+﻿<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Utilizadores - GSMed</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .card {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: none;
+            border-radius: 15px;
+        }
+
+        .table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .btn {
+            border-radius: 25px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            color: #28a745;
+        }
+
+        .status-inactive {
+            color: #dc3545;
+        }
+
+        .user-role {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-11">
+                <div class="card">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <h2 class="mb-0"><i class="fas fa-users me-3"></i>Lista de Utilizadores</h2>
+                        <p class="mb-0 opacity-75">Gerir utilizadores ativos e inativos</p>
+                    </div>
+
+                    <div class="card-body p-0">
+                        {% if user %}
+                        <div class="p-4 border-bottom bg-light">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-user-circle text-primary me-2"></i>
+                                        Bem-vindo, {{ user_nome }} ({{ user }})
+                                    </h6>
+                                    <small class="text-muted">Administração de utilizadores</small>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <a href="/computadores" class="btn btn-outline-primary btn-sm me-2">
+                                        <i class="fas fa-laptop me-1"></i>Computadores
+                                    </a>
+                                    <a href="/" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Sair
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="p-4">
+                            <!-- Botão Novo Utilizador -->
+                            <div class="mb-4">
+                                <a href="/utilizadores/novo" class="btn btn-success btn-lg">
+                                    <i class="fas fa-plus me-2"></i>Novo Utilizador
+                                </a>
+                            </div>
+
+                            <!-- Tabela Utilizadores -->
+                            {% if users %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th><i class="fas fa-hashtag me-2"></i>ID</th>
+                                            <th><i class="fas fa-user me-2"></i>Username</th>
+                                            <th><i class="fas fa-user-circle me-2"></i>Nome Completo</th>
+                                            <th><i class="fas fa-envelope me-2"></i>Email</th>
+                                            <th><i class="fas fa-users-cog me-2"></i>Role</th>
+                                            <th><i class="fas fa-toggle-on me-2"></i>Ativo</th>
+                                            <th><i class="fas fa-calendar me-2"></i>Data Criação</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user_row in users %}
+                                        <tr>
+                                            <td><strong>{{ loop.index }}</strong></td>
+                                            <td>
+                                                <strong>{{ user_row.Username }}</strong>
+                                                {% if user_row.Username == user %}<span class="badge bg-primary ms-1">EU</span>{% endif %}
+                                            </td>
+                                            <td>{{ user_row.NomeCompleto or '-' }}</td>
+                                            <td>
+                                                {% if user_row.Email %}
+                                                <i class="fas fa-envelope text-success me-1"></i>{{ user_row.Email }}
+                                                {% else %}
+                                                <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge
+                                                    {% if user_row.RoleNome == 'Admin' %}bg-danger
+                                                    {% elif user_row.RoleNome == 'Utilizador' %}bg-info
+                                                    {% else %}bg-secondary
+                                                    {% endif %}">
+                                                    {{ user_row.RoleNome or 'N/A' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if user_row.Ativo %}
+                                                <i class="fas fa-circle status-active fs-6"></i>
+                                                <span class="status-active">Ativo</span>
+                                                {% else %}
+                                                <i class="fas fa-circle status-inactive fs-6"></i>
+                                                <span class="status-inactive">Inativo</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user_row.DataCriacao[:16] if user_row.DataCriacao else '-' }}</td>
+
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    {% if user_row.Username != user %}
+                                                    <a href="/utilizadores/editar/{{ user_row.IdUser }}"
+                                                       class="btn btn-outline-primary"
+                                                       title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <form method="post" action="/utilizadores/ativar/{{ user_row.IdUser }}"
+                                                          style="display: inline;"
+                                                          onsubmit="return confirm('Confirmar alteração de estado?')">
+                                                        <input type="hidden" name="csrf_token" value="">
+                                                        {% if user_row.Ativo %}
+                                                        <button type="submit" class="btn btn-outline-danger" title="Desativar">
+                                                            <i class="fas fa-toggle-off"></i>
+                                                        </button>
+                                                        {% else %}
+                                                        <button type="submit" class="btn btn-outline-success" title="Ativar">
+                                                            <i class="fas fa-toggle-on"></i>
+                                                        </button>
+                                                        {% endif %}
+                                                    </form>
+                                                    {% else %}
+                                                    <span class="text-muted small">
+                                                        -
+                                                        <i class="fas fa-lock ms-1"></i>
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nenhum utilizador encontrado</h5>
+                                <a href="/utilizadores/novo" class="btn btn-primary mt-2">
+                                    Criar primeiro utilizador
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-refresh opcional (comentado)
+        // setInterval(() => location.reload(), 30000);
+    </script>
+</body>
+</html>

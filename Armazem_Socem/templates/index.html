@@ -1,0 +1,268 @@
+﻿{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">📊 Dashboard Produção</h1>
+</div>
+
+<!-- Cards Estatísticas (8 cards, 2 linhas de 4) -->
+<div class="row mb-4">
+    <!-- Linha 1: Moldes -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-3" data-toggle="tooltip" title="Moldes ativos (interno + externo)">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Moldes Ativos</div>
+                        <div class="h2 mb-0 font-weight-bold text-gray-800">{{ total_moldes }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-3" data-toggle="tooltip" title="Moldes em localização externa">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Moldes Fora</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ moldes_fora }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-3" data-toggle="tooltip" title="Moldes em localização interna">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Moldes Internos</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ moldes_internos }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-secondary shadow h-100 py-3" data-toggle="tooltip" title="Moldes com ativo=0 (finalizados)">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Moldes Finalizados</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ moldes_finalizados }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Linha 2: Peças -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-3" data-toggle="tooltip" title="Peças ativas (interno + externo)">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Peças Ativas</div>
+                        <div class="h2 mb-0 font-weight-bold text-gray-800">{{ total_pecas }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-3" data-toggle="tooltip" title="Peças em localização externa">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Peças Fora</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ pecas_fora }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-3" data-toggle="tooltip" title="Peças em localização interna">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Peças Internas</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ pecas_internos }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-dark shadow h-100 py-3" data-toggle="tooltip" title="Peças com ativo=0 (finalizadas)">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">Peças Finalizadas</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ pecas_finalizadas }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos (lado a lado) -->
+<div class="row mb-4">
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">📍 Moldes por Localização</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="pizzaMoldes" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">📦 Peças por Localização</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="pizzaPecas" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela: Moldes Recentes (últimos 10 ativos) -->
+<div class="row mb-4">
+    <div class="col-xl-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-info">🔄 Moldes Recentes (Últimos 10)</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Localização</th>
+                                <th>Data Criação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if moldes_recentes %}
+                            {% for molde in moldes_recentes %}
+                            <tr>
+                                <td>{{ molde[0] }}</td>
+                                <td>{{ molde[1] }}</td>
+                                <td>{{ molde[2] }}</td>
+                                <td>{{ molde[3].strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <a href="/molde/editar/{{ molde[0] }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                                    <a href="/molde/visualizar/{{ molde[0] }}" class="btn btn-sm btn-outline-info">Ver</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted">Sem moldes recentes</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Links Rápidos -->
+<div class="row mb-4">
+    <div class="col-md-2"><a href="/peca/criar" class="card-link-rapido">⚙️ Nova Peça</a></div>
+    <div class="col-md-2"><a href="/molde/criar" class="card-link-rapido">🔧 Novo Molde</a></div>
+    <div class="col-md-2"><a href="/moldes" class="card-link-rapido">🧊 Lista Moldes</a></div>
+    <div class="col-md-2"><a href="/pecas" class="card-link-rapido">📋 Lista Peças</a></div>
+    <div class="col-md-2"><a href="/localizacoes" class="card-link-rapido">📍 Localizações</a></div>
+    <div class="col-md-2"><a href="/localizacao/criar" class="card-link-rapido">➕ Nova Localização</a></div>
+    <div class="col-md-2"><a href="/moldes-finalizados" class="card-link-rapido">⚠️ Finalizados</a></div>
+    <div class="col-md-2"><a href="/movimento/molde" class="card-link-rapido">Mover Moldes</a></div>
+    <div class="col-md-2"><a href="/movimento/peca" class="card-link-rapido">Mover Peça</a></div>
+
+    {% if session.user_id %}
+    <div class="navbar-text ms-auto">
+        👋 <strong>{{ session.user_nome }}</strong>
+        ({{ session.user_tipo|upper }})
+        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+    </div>
+    {% endif %}
+
+
+</div>
+
+<!-- SCRIPTS Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico Moldes
+    const ctxMoldes = document.getElementById('pizzaMoldes').getContext('2d');
+    new Chart(ctxMoldes, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for loc in moldes_por_loc %}'{{ loc[0] }}',{% endfor %}],
+            datasets: [{
+                data: [{% for loc in moldes_por_loc %}{{ loc[1] }},{% endfor %}],
+                backgroundColor: ['#007bff','#28a745','#ffc107','#dc3545','#6f42c1','#fd7e14']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Gráfico Peças
+    const ctxPecas = document.getElementById('pizzaPecas').getContext('2d');
+    new Chart(ctxPecas, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for loc in pecas_por_loc %}'{{ loc[0] }}',{% endfor %}],
+            datasets: [{
+                data: [{% for loc in pecas_por_loc %}{{ loc[1] }},{% endfor %}],
+                backgroundColor: ['#28a745','#007bff','#17a2b8','#ffc107','#6f42c1','#e83e8c']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Tooltips Bootstrap
+    $(document).ready(function(){ $('[data-toggle="tooltip"]').tooltip(); });
+</script>
+
+<!-- ESTILOS -->
+<style>
+    .card-link-rapido {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        padding: 20px;
+        text-align: center;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-weight: bold;
+        transition: all 0.3s;
+        background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    }
+
+        .card-link-rapido:hover {
+            transform: scale(1.05);
+            border-color: #007bff;
+            background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+            color: #007bff !important;
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+        }
+
+    @media (max-width: 768px) {
+        .card-link-rapido {
+            padding: 15px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}

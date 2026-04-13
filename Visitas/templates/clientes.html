@@ -1,0 +1,362 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1>{{ textos.client_title }}</h1>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Tabela à esquerda -->
+        <div class="col-md-8">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="grid-header">
+                        <tr>
+                            <th>{{ textos.name }}</th>
+                            <th>{{ textos.company }}</th>
+                            <th>{{ textos.date }}</th>
+                            <th>{{ textos.action }}</th>
+                            <th>{{ textos.label }}</th>
+                        </tr>
+
+                    </thead>
+                    <tbody>
+                        {% for v in visitantes %}
+                        <tr style="{% if v['PreConfirmado'] == 'SIM' %}background-color:#d4edda;{% endif %}">
+                            <td>{{ v["Nome"] }}</td>
+                            <td>{{ v["Empresa"] }}</td>
+                            <td>{{ v["Data"].strftime('%d/%m ') if v["Data"] else '' }}</td>
+                            <td>
+                                <button class="btn btn-success btn-checkin"
+                                        data-id="{{ v['Id'] }}"
+                                        data-nome="{{ v['Nome'] }}"
+                                        id="checkin-{{ v['Id'] }}"
+                                        style="{% if not request.cookies.get('grupoid', '') %}opacity: 0.5; cursor: not-allowed;{% endif %}">
+                                    <i class="fas fa-check"></i> {{ textos.checkin }}
+                                </button>
+                            </td>
+                            <td>
+                                <form onsubmit="return enviarLabel(event, {{ v['Id'] }})">
+
+                                    <button type="submit"
+                                            class="btn btn-secondary btn-label">
+
+                                        <i class="fas fa-tag"></i> {{ textos.existing_label }}
+
+                                    </button>
+
+                                </form>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+          
+            <!-- Botões à direita -->
+            <div class="col-md-4 d-flex flex-column h-100 p-3">
+                <div class="row g-2 mb-4">
+                    {% for g in grupos %}
+                    <div class="col-6">
+                        <!-- ← 2 colunas -->
+                        <button class="btn btn-socem-group w-100 fs-6 fw-bold"
+                                data-grupo="{{ g.nome }}"
+                                data-tipo="clientes">
+                            {{ g.nome }}
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Rodapé -->
+                <div class="mt-auto">
+                    <p class="text-muted small mb-2">{{ textos.select_team }}</p>
+                    <button class="btn btn-outline-secondary w-100" onclick="window.location.href='/';">
+                        {{ textos.back }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- GDPR + Register -->
+            <div class="container-fluid mt-4 pt-3 border-top bg-light ps-3" style="text-align: left !important;">
+                <div class="row">
+                    <div class="col-12 col-xl-8 col-lg-10 text-start">
+                        <h6 class="text-primary mb-3 fw-bold ps-0">{{ textos.gdpr_title }}</h6>
+                        <p class="text-muted small lh-lg mb-2">
+                            {{ textos.gdpr_1 }}
+                        </p>
+                        <p class="text-muted small lh-lg mb-1">
+                            {{ textos.gdpr_2 }}
+                            <span class="ms-auto d-inline-block text-end float-end me-3">
+                                <button class="btn btn-outline-primary btn-lg px-4 py-2 fw-bold" onclick="window.location.href='/registo_clientes';">
+                                    {{ textos.register_client }}
+                                </button>
+                            </span>
+                        </p>
+                        <p class="text-muted small lh-lg mb-0 mt-1">
+                            {{ textos.gdpr_3 }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+<style>
+/* Botões de grupos SOCEM */
+.btn-socem-group {
+    background-color: #E01F26 !important;
+    border-color: #E01F26 !important;
+    color: #ffffff !important;
+}
+
+.btn-socem-group:hover {
+    background-color: #c91920 !important;
+    border-color: #c91920 !important;
+    color: #ffffff !important;
+}
+
+.btn-socem-group.active {
+    background-color: #c91920 !important;
+    border-color: #c91920 !important;
+    color: #ffffff !important;
+}
+
+/* Título 'Personal Data Protection' */
+.text-primary {
+    color: #E01F26 !important;
+}
+
+/* Botão 'Register Client' (outline) */
+.btn-outline-primary {
+    color: #E01F26 !important;
+    border-color: #E01F26 !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #E01F26 !important;
+    border-color: #E01F26 !important;
+    color: #ffffff !important;
+}
+</style>
+
+<script>
+
+
+    /* ==========================
+       EXISTING LABEL AJAX
+    ========================== */
+    async function enviarLabel(event, id) {
+
+        event.preventDefault();
+
+        if (!verificarGrupo()) return false;
+
+        try {
+
+            const response = await fetch(`/label-existente/${id}`, {
+                method: 'POST'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+
+                alert(
+                    "📧 Emails enviados para:\n\n" +
+                    data.emails.join("\n")
+                );
+
+                location.reload();
+
+            }
+
+        } catch (err) {
+
+            alert("Erro ao enviar emails");
+
+        }
+
+        return false;
+    }
+
+
+
+
+   
+
+    /* ==========================
+       UTILIDADES COOKIE
+    ========================== */
+    function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
+    }
+
+    function temGrupoSelecionado() {
+        return getCookie('grupoid') !== null;
+    }
+
+    /* ==========================
+       CHECK-IN BUTTONS
+    ========================== */
+    function ativaCheckins(ativo) {
+        document.querySelectorAll('.btn-checkin').forEach(btn => {
+            if (ativo) {
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.dataset.disabled = 'false';
+                btn.disabled = false;
+                btn.title = '';
+            } else {
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.dataset.disabled = 'true';
+                btn.disabled = true;
+                btn.title = 'Selecione equipa primeiro!';
+            }
+        });
+    }
+
+    /* ==========================
+       MARCAR EQUIPA ATIVA  ← do Script 1
+    ========================== */
+    function marcarEquipaAtiva() {
+        const grupoid = getCookie('grupoid');
+        if (!grupoid) return;
+
+        document.querySelectorAll('.btn-socem-group').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.grupo === grupoid) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    /* ==========================
+       ON LOAD
+    ========================== */
+    document.addEventListener('DOMContentLoaded', () => {
+        // Mantém do Script 2: limpa cookie e desativa tudo
+        document.cookie = "grupoid=; path=/; expires=Thu, 01 Jan 1970 00:00:00";
+        document.querySelectorAll('.btn-socem-group').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        ativaCheckins(false);
+    });
+
+    /* ==========================
+       BOTÕES DE EQUIPA
+    ========================== */
+    let timeoutGrupo = null;
+
+    document.querySelectorAll('.btn-socem-group').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault(); // ← do Script 1
+            const grupoid = btn.dataset.grupo;
+            const tipo = btn.dataset.tipo || 'clientes';
+
+            if (timeoutGrupo) clearTimeout(timeoutGrupo);
+
+            document.cookie = `grupoid=${grupoid}; path=/;`;
+
+            // Atualiza visual ← do Script 1
+            document.querySelectorAll('.btn-socem-group').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            ativaCheckins(true);
+
+            const formData = new FormData();
+            formData.append('grupoid', grupoid);
+            formData.append('tipo', tipo);
+
+            try {
+                const response = await fetch('/selecionar-grupo', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error('Erro ao selecionar grupo');
+            } catch (err) {
+                console.error("Erro selecionar grupo:", err); // ← do Script 1
+                alert('Erro ao selecionar equipa!');
+            }
+
+            // Reset de 10 segundos ← mantém do Script 2
+            timeoutGrupo = setTimeout(() => {
+                console.log("⏱️ Tempo expirado - limpar seleção");
+                document.cookie = "grupoid=; path=/; expires=Thu, 01 Jan 1970 00:00:00";
+                document.querySelectorAll('.btn-socem-group').forEach(b => b.classList.remove('active'));
+                ativaCheckins(false);
+            }, 10000);
+        });
+    });
+
+    /* ==========================
+       CHECK-IN  ← do Script 1
+    ========================== */
+    document.querySelectorAll('.btn-checkin').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        console.log("ID:", btn.dataset.id);
+        if (btn.dataset.disabled === 'true') return;
+
+        const textoOriginal = btn.innerHTML;
+
+        // 🔄 LOADING
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> A processar...';
+
+        try {
+            const response = await fetch(`/checkin/${btn.dataset.id}`, { method: 'POST' });
+
+            if (response.ok) {
+                // ✅ SUCESSO
+                btn.innerHTML = '✔ OK';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 800);
+            } else {
+                throw new Error();
+            }
+        } catch (error) {
+            console.error(error);
+
+            // ❌ ERRO
+            btn.innerHTML = '❌ Erro';
+            btn.classList.add('btn-danger');
+
+            setTimeout(() => {
+                btn.innerHTML = textoOriginal;
+                btn.disabled = false;
+            }, 1500);
+        }
+    });
+    });
+
+
+    /* ==========================
+       VALIDAR GRUPO ETIQUETA
+    ========================== */
+
+    function verificarGrupo() {
+
+        const grupoAtivo = document.querySelector('.btn-socem-group.active');
+
+        if (!grupoAtivo) {
+
+            alert("🚫 SELECIONE EQUIPA PRIMEIRO!");
+
+            return false; // BLOQUEIA submit
+        }
+
+        return true; // PERMITE submit
+    }
+
+
+
+
+    /* ==========================
+       AUTO-RELOAD  ← do Script 1
+    ========================== */
+    setInterval(() => location.reload(), 15000);
+</script>
+
+{% endblock %}
