@@ -26,23 +26,31 @@
       gap: 12px;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
+    .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon { font-size: 34px; }
+    .brand h1 { font-size: 20px; font-weight: 700; line-height: 1.2; }
+    .brand p  { font-size: 12px; color: rgba(255,255,255,0.5); }
 
-    .brand h1 {
-      font-size: 20px;
-      font-weight: 700;
-      line-height: 1.2;
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .role-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
 
-    .brand p {
-      font-size: 12px;
-      color: rgba(255,255,255,0.5);
+    .role-badge.admin {
+      background: rgba(233,69,96,0.2);
+      border: 1px solid rgba(233,69,96,0.4);
+      color: #ff8a9a;
+    }
+
+    .role-badge.user {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.6);
     }
 
     .btn-logout {
@@ -85,34 +93,20 @@
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.12);
       color: #fff;
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: 10px;
       font-size: 18px;
       cursor: pointer;
       transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
     }
 
     .nav-btn:hover { background: rgba(255,255,255,0.16); }
 
     .nav-center { text-align: center; }
+    .nav-month  { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+    .nav-year   { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 2px; }
 
-    .nav-month {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-year {
-      font-size: 13px;
-      color: rgba(255,255,255,0.5);
-      margin-top: 2px;
-    }
-
-    /* ── Today button ────────────────────────────────────────── */
     .btn-today {
       background: rgba(233,69,96,0.2);
       border: 1px solid rgba(233,69,96,0.4);
@@ -126,7 +120,7 @@
 
     .btn-today:hover { background: rgba(233,69,96,0.35); }
 
-    /* ── Day-of-week header ──────────────────────────────────── */
+    /* ── Weekday labels ──────────────────────────────────────── */
     .cal-weekdays {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -162,24 +156,15 @@
     }
 
     .cal-day.empty { background: rgba(10,14,35,0.4); cursor: default; }
-
-    .cal-day.has-almocos {
-      cursor: pointer;
-    }
-
-    .cal-day.has-almocos:hover {
-      background: rgba(233,69,96,0.12);
-    }
+    .cal-day.has-almocos { cursor: pointer; }
+    .cal-day.has-almocos:hover { background: rgba(233,69,96,0.12); }
 
     .cal-day.is-today .day-num {
       background: #e94560;
       color: #fff;
       border-radius: 50%;
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
     }
 
     .cal-day.is-weekend .day-num { color: rgba(233,69,96,0.8); }
@@ -189,34 +174,56 @@
       font-weight: 600;
       color: rgba(255,255,255,0.75);
       display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
+      align-items: center; justify-content: center;
+      width: 28px; height: 28px;
     }
 
-    /* ── Lunch badge ─────────────────────────────────────────── */
+    /* ── Badges ──────────────────────────────────────────────── */
+    .badges { margin-top: 7px; display: flex; flex-direction: column; gap: 4px; }
+
     .lunch-badge {
-      margin-top: 8px;
       display: inline-flex;
       align-items: center;
       gap: 5px;
       background: linear-gradient(135deg, #e94560, #c0392b);
       border-radius: 20px;
-      padding: 4px 10px;
+      padding: 3px 9px;
       font-size: 12px;
       font-weight: 700;
       color: #fff;
       box-shadow: 0 2px 8px rgba(233,69,96,0.4);
+      width: fit-content;
     }
 
-    .lunch-badge .lbl {
-      font-size: 10px;
-      font-weight: 500;
-      opacity: 0.85;
+    .present-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(46,213,115,0.2);
+      border: 1px solid rgba(46,213,115,0.4);
+      border-radius: 20px;
+      padding: 3px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #55efc4;
+      width: fit-content;
     }
 
-    /* ── Loading spinner ─────────────────────────────────────── */
+    .badge-lbl { font-size: 10px; font-weight: 500; opacity: 0.85; }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    .cal-footer {
+      padding: 16px 28px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+
+    .stat { display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.6); }
+    .stat strong { color: #fff; font-size: 20px; }
+
     .loading {
       text-align: center;
       padding: 40px;
@@ -224,26 +231,6 @@
       font-size: 14px;
       grid-column: span 7;
     }
-
-    /* ── Summary bar ─────────────────────────────────────────── */
-    .cal-footer {
-      padding: 16px 28px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .stat {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: rgba(255,255,255,0.6);
-    }
-
-    .stat strong { color: #fff; font-size: 20px; }
 
     /* ── Modal ───────────────────────────────────────────────── */
     .modal-overlay {
@@ -265,7 +252,7 @@
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 18px;
       width: 100%;
-      max-width: 540px;
+      max-width: 600px;
       max-height: 80vh;
       display: flex;
       flex-direction: column;
@@ -287,38 +274,28 @@
     }
 
     .modal-title { font-size: 18px; font-weight: 700; }
-    .modal-sub   { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+    .modal-sub   { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .modal-sub span { display: flex; align-items: center; gap: 4px; }
 
     .modal-close {
       background: rgba(255,255,255,0.08);
       border: none;
       color: #fff;
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border-radius: 8px;
       font-size: 18px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       transition: background 0.2s;
       flex-shrink: 0;
     }
 
     .modal-close:hover { background: rgba(255,255,255,0.16); }
 
-    .modal-body {
-      overflow-y: auto;
-      padding: 16px 24px 24px;
-      flex: 1;
-    }
+    .modal-body { overflow-y: auto; padding: 16px 24px 24px; flex: 1; }
 
-    /* ── Table inside modal ──────────────────────────────────── */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
+    /* ── Table ───────────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
 
     thead th {
       text-align: left;
@@ -330,6 +307,8 @@
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
+    thead th.th-center { text-align: center; }
+
     tbody tr {
       border-bottom: 1px solid rgba(255,255,255,0.05);
       transition: background 0.15s;
@@ -337,6 +316,7 @@
 
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: rgba(255,255,255,0.04); }
+    tbody tr.is-present { background: rgba(46,213,115,0.06); }
 
     tbody td {
       padding: 11px 12px;
@@ -345,6 +325,7 @@
     }
 
     tbody td:first-child { font-weight: 600; }
+    tbody td.td-center { text-align: center; }
 
     .empresa-tag {
       background: rgba(255,255,255,0.08);
@@ -353,14 +334,11 @@
       font-size: 12px;
     }
 
-    .resp-tag {
-      color: rgba(255,255,255,0.55);
-      font-size: 13px;
-    }
+    .resp-tag { color: rgba(255,255,255,0.55); font-size: 13px; }
 
-    .tipo-Cliente {
-      background: rgba(52, 152, 219, 0.2);
-      border: 1px solid rgba(52, 152, 219, 0.4);
+    .tipo-cliente {
+      background: rgba(52,152,219,0.2);
+      border: 1px solid rgba(52,152,219,0.4);
       color: #74b9ff;
       border-radius: 5px;
       padding: 2px 8px;
@@ -369,13 +347,36 @@
     }
 
     .tipo-fornecedor {
-      background: rgba(46, 213, 115, 0.2);
-      border: 1px solid rgba(46, 213, 115, 0.4);
+      background: rgba(46,213,115,0.2);
+      border: 1px solid rgba(46,213,115,0.4);
       color: #55efc4;
       border-radius: 5px;
       padding: 2px 8px;
       font-size: 11px;
       font-weight: 600;
+    }
+
+    /* ── Presence checkbox ───────────────────────────────────── */
+    .presence-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .presence-check {
+      width: 20px; height: 20px;
+      cursor: pointer;
+      accent-color: #2ed573;
+    }
+
+    .presence-check:disabled { cursor: wait; opacity: 0.5; }
+
+    .presente-icon { font-size: 16px; }
+
+    .saving-indicator {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-left: 6px;
     }
 
     .error-msg {
@@ -396,12 +397,18 @@
         <p>Visitantes com almoço confirmado</p>
       </div>
     </div>
-    <a href="/logout" class="btn-logout">Sair ↩</a>
+    <div class="header-right">
+      {% if role == 'admin' %}
+        <span class="role-badge admin">⚙️ Admin</span>
+      {% else %}
+        <span class="role-badge user">👤 Utilizador</span>
+      {% endif %}
+      <a href="/logout" class="btn-logout">Sair ↩</a>
+    </div>
   </header>
 
   <div class="cal-card">
 
-    <!-- Navigation -->
     <div class="cal-nav">
       <button class="nav-btn" id="btnPrev">&#8249;</button>
       <div class="nav-center">
@@ -414,26 +421,20 @@
       </div>
     </div>
 
-    <!-- Weekday labels -->
     <div class="cal-weekdays">
       <span>Dom</span><span>Seg</span><span>Ter</span>
       <span>Qua</span><span>Qui</span><span>Sex</span>
       <span class="weekend">Sáb</span>
     </div>
 
-    <!-- Day grid -->
     <div class="cal-grid" id="calGrid">
       <div class="loading">A carregar...</div>
     </div>
 
-    <!-- Footer summary -->
     <div class="cal-footer">
-      <div class="stat">
-        <strong id="statTotal">–</strong> almoços neste mês
-      </div>
-      <div class="stat">
-        <strong id="statDias">–</strong> dias com almoço
-      </div>
+      <div class="stat"><strong id="statConfirmados">–</strong> confirmados este mês</div>
+      <div class="stat"><strong id="statPresentes">–</strong> presentes este mês</div>
+      <div class="stat"><strong id="statDias">–</strong> dias com almoço</div>
     </div>
   </div>
 
@@ -443,7 +444,7 @@
       <div class="modal-header">
         <div>
           <div class="modal-title" id="modalTitle"></div>
-          <div class="modal-sub"  id="modalSub"></div>
+          <div class="modal-sub" id="modalSub"></div>
         </div>
         <button class="modal-close" id="modalClose">✕</button>
       </div>
@@ -457,11 +458,11 @@
       'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
     ];
 
-    const WEEKDAYS_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-
-    let currentYear  = {{ year }};
-    let currentMonth = {{ month }};
-    let lunchData    = {};
+    const IS_ADMIN    = {{ 'true' if role == 'admin' else 'false' }};
+    let currentYear   = {{ year }};
+    let currentMonth  = {{ month }};
+    let lunchData     = {};
+    let currentDate   = null;   // date string open in modal
 
     // ── Render calendar ──────────────────────────────────────────
     async function renderCalendar() {
@@ -473,17 +474,20 @@
 
       lunchData = await fetchLunchData(currentYear, currentMonth);
 
-      const today   = new Date();
+      const today  = new Date();
       const isToday = (d) =>
         today.getFullYear() === currentYear &&
         today.getMonth() + 1 === currentMonth &&
         today.getDate() === d;
 
-      // Day of week of the 1st (0=Sun … 6=Sat)
-      const firstDow   = new Date(currentYear, currentMonth - 1, 1).getDay();
+      const firstDow    = new Date(currentYear, currentMonth - 1, 1).getDay();
       const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
       grid.innerHTML = '';
+
+      let totalConfirmados = 0;
+      let totalPresentes   = 0;
+      let diasComAlmoco    = 0;
 
       // Empty leading cells
       for (let i = 0; i < firstDow; i++) {
@@ -492,26 +496,23 @@
         grid.appendChild(cell);
       }
 
-      let totalAlmocos = 0;
-      let diasComAlmoco = 0;
-
       for (let d = 1; d <= daysInMonth; d++) {
-        const cell  = document.createElement('div');
+        const cell = document.createElement('div');
         cell.className = 'cal-day';
 
         const dow = (firstDow + d - 1) % 7;
         if (dow === 0 || dow === 6) cell.classList.add('is-weekend');
         if (isToday(d))             cell.classList.add('is-today');
 
-        // Date key
         const dateStr = `${currentYear}-${String(currentMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const count   = lunchData[dateStr] || 0;
+        const counts  = lunchData[dateStr] || { confirmados: 0, presentes: 0 };
 
-        if (count > 0) {
+        if (counts.confirmados > 0) {
           cell.classList.add('has-almocos');
-          totalAlmocos += count;
+          totalConfirmados += counts.confirmados;
+          totalPresentes   += counts.presentes;
           diasComAlmoco++;
-          cell.addEventListener('click', () => openModal(dateStr, d, count));
+          cell.addEventListener('click', () => openModal(dateStr, d, counts));
         }
 
         // Day number
@@ -520,97 +521,198 @@
         numEl.textContent = d;
         cell.appendChild(numEl);
 
-        // Lunch badge
-        if (count > 0) {
-          const badge = document.createElement('div');
-          badge.className = 'lunch-badge';
-          badge.innerHTML = `🍽️ <strong>${count}</strong> <span class="lbl">${count === 1 ? 'almoço' : 'almoços'}</span>`;
-          cell.appendChild(badge);
+        // Badges
+        if (counts.confirmados > 0) {
+          const badgesEl = document.createElement('div');
+          badgesEl.className = 'badges';
+          badgesEl.id = `badges-${dateStr}`;
+
+          badgesEl.innerHTML = `
+            <div class="lunch-badge">
+              🍽️ <strong>${counts.confirmados}</strong>
+              <span class="badge-lbl">${counts.confirmados === 1 ? 'confirmado' : 'confirmados'}</span>
+            </div>
+            ${counts.presentes > 0 ? `
+            <div class="present-badge">
+              ✅ <strong>${counts.presentes}</strong>
+              <span class="badge-lbl">${counts.presentes === 1 ? 'presente' : 'presentes'}</span>
+            </div>` : ''}
+          `;
+          cell.appendChild(badgesEl);
         }
 
         grid.appendChild(cell);
       }
 
-      // Summary
-      document.getElementById('statTotal').textContent = totalAlmocos;
-      document.getElementById('statDias').textContent  = diasComAlmoco;
+      document.getElementById('statConfirmados').textContent = totalConfirmados;
+      document.getElementById('statPresentes').textContent   = totalPresentes;
+      document.getElementById('statDias').textContent        = diasComAlmoco;
     }
 
-    // ── Fetch month data from API ─────────────────────────────────
+    // ── Fetch month data ──────────────────────────────────────────
     async function fetchLunchData(year, month) {
       try {
         const res  = await fetch(`/api/almocos?year=${year}&month=${month}`);
         const data = await res.json();
-        if (data.error) { console.error(data.error); return {}; }
-        return data;
-      } catch (e) {
-        console.error(e);
-        return {};
-      }
+        return data.error ? {} : data;
+      } catch (e) { return {}; }
     }
 
-    // ── Modal ─────────────────────────────────────────────────────
-    async function openModal(dateStr, day, count) {
+    // ── Open modal ────────────────────────────────────────────────
+    async function openModal(dateStr, day, counts) {
+      currentDate = dateStr;
       const overlay = document.getElementById('modalOverlay');
       const body    = document.getElementById('modalBody');
-      const title   = document.getElementById('modalTitle');
-      const sub     = document.getElementById('modalSub');
+      const [y, m]  = dateStr.split('-');
 
-      // Format date in Portuguese
-      const [y, m, d] = dateStr.split('-');
-      title.textContent = `${parseInt(d)} de ${MONTHS_PT[parseInt(m)-1]} de ${y}`;
-      sub.textContent   = `${count} ${count === 1 ? 'pessoa' : 'pessoas'} a almoçar`;
+      document.getElementById('modalTitle').textContent =
+        `${day} de ${MONTHS_PT[parseInt(m)-1]} de ${y}`;
+
+      updateModalSub(counts);
 
       body.innerHTML = '<div class="loading">A carregar...</div>';
       overlay.classList.add('open');
 
+      await loadModalBody(dateStr);
+    }
+
+    function updateModalSub(counts) {
+      document.getElementById('modalSub').innerHTML = `
+        <span>🍽️ <strong>${counts.confirmados}</strong> confirmado${counts.confirmados !== 1 ? 's' : ''}</span>
+        <span>✅ <strong>${counts.presentes}</strong> presente${counts.presentes !== 1 ? 's' : ''}</span>
+      `;
+    }
+
+    async function loadModalBody(dateStr) {
+      const body = document.getElementById('modalBody');
       try {
         const res  = await fetch(`/api/dia/${dateStr}`);
         const data = await res.json();
 
-        if (data.error) {
-          body.innerHTML = `<div class="error-msg">Erro: ${data.error}</div>`;
-          return;
-        }
+        if (data.error) { body.innerHTML = `<div class="error-msg">Erro: ${data.error}</div>`; return; }
+        if (!data.length) { body.innerHTML = '<div class="error-msg">Sem registos.</div>'; return; }
 
-        if (data.length === 0) {
-          body.innerHTML = '<div class="error-msg">Sem registos encontrados.</div>';
-          return;
-        }
-
-        let html = `
-          <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Empresa</th>
-                <th>Responsável</th>
-                <th>Tipo</th>
-              </tr>
-            </thead>
-            <tbody>`;
+        let html = `<table><thead><tr>
+          <th>Nome</th><th>Empresa</th><th>Responsável</th><th>Tipo</th>
+          <th class="th-center">Presente</th>
+        </tr></thead><tbody>`;
 
         data.forEach(r => {
-          const tipoClass = r.tipo === 'Fornecedor' ? 'tipo-fornecedor' : 'tipo-Cliente';
-          html += `
-              <tr>
-                <td>${escHtml(r.nome)}</td>
-                <td><span class="empresa-tag">${escHtml(r.empresa)}</span></td>
-                <td class="resp-tag">${escHtml(r.responsavel)}</td>
-                <td><span class="${tipoClass}">${escHtml(r.tipo)}</span></td>
-              </tr>`;
+          const tipoClass   = r.tipo === 'Fornecedor' ? 'tipo-fornecedor' : 'tipo-cliente';
+          const presenteRow = r.presente ? 'is-present' : '';
+
+          // Admin: checkbox interativa | User: ícone só leitura
+          const presenteCell = IS_ADMIN
+            ? `<td class="td-center">
+                <div class="presence-wrap">
+                  <input type="checkbox" class="presence-check"
+                    data-id="${r.id}" data-tipo="${escHtml(r.tipo)}" data-data="${dateStr}"
+                    ${r.presente ? 'checked' : ''} />
+                </div>
+               </td>`
+            : `<td class="td-center">
+                <span class="presente-icon">${r.presente ? '✅' : '—'}</span>
+               </td>`;
+
+          html += `<tr class="${presenteRow}">
+            <td>${escHtml(r.nome)}</td>
+            <td><span class="empresa-tag">${escHtml(r.empresa)}</span></td>
+            <td class="resp-tag">${escHtml(r.responsavel)}</td>
+            <td><span class="${tipoClass}">${escHtml(r.tipo)}</span></td>
+            ${presenteCell}
+          </tr>`;
         });
 
         html += '</tbody></table>';
         body.innerHTML = html;
 
-      } catch (e) {
-        body.innerHTML = `<div class="error-msg">Erro de ligação.</div>`;
-      }
+      } catch (e) { body.innerHTML = '<div class="error-msg">Erro de ligação.</div>'; }
     }
 
+    // ── Auto-save presence (admin only) ──────────────────────────
+    document.getElementById('modalBody').addEventListener('change', async (e) => {
+      if (!IS_ADMIN || !e.target.classList.contains('presence-check')) return;
+
+      const cb   = e.target;
+      const wrap = cb.closest('.presence-wrap');
+      cb.disabled = true;
+
+      // Add saving indicator
+      let ind = wrap.querySelector('.saving-indicator');
+      if (!ind) { ind = document.createElement('span'); ind.className = 'saving-indicator'; wrap.appendChild(ind); }
+      ind.textContent = '...';
+
+      try {
+        const res = await fetch('/api/presenca', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_visitante: parseInt(cb.dataset.id),
+            tipo:         cb.dataset.tipo,
+            data:         cb.dataset.data,
+            presente:     cb.checked
+          })
+        });
+        const result = await res.json();
+        ind.textContent = result.ok ? '✓' : '✗';
+
+        // Update row highlight
+        const row = cb.closest('tr');
+        if (cb.checked) row.classList.add('is-present');
+        else            row.classList.remove('is-present');
+
+        // Refresh badge on calendar
+        await refreshDayBadge(cb.dataset.data);
+
+      } catch (err) {
+        ind.textContent = '✗';
+        cb.checked = !cb.checked; // revert
+      } finally {
+        cb.disabled = false;
+        setTimeout(() => { if (ind) ind.textContent = ''; }, 1500);
+      }
+    });
+
+    // ── Refresh badge for one day without full re-render ─────────
+    async function refreshDayBadge(dateStr) {
+      const [y, m] = dateStr.split('-').map(Number);
+      const data   = await fetchLunchData(y, m);
+      const counts = data[dateStr] || { confirmados: 0, presentes: 0 };
+
+      // Update calendar badge
+      const badgesEl = document.getElementById(`badges-${dateStr}`);
+      if (badgesEl) {
+        badgesEl.innerHTML = `
+          <div class="lunch-badge">
+            🍽️ <strong>${counts.confirmados}</strong>
+            <span class="badge-lbl">${counts.confirmados === 1 ? 'confirmado' : 'confirmados'}</span>
+          </div>
+          ${counts.presentes > 0 ? `
+          <div class="present-badge">
+            ✅ <strong>${counts.presentes}</strong>
+            <span class="badge-lbl">${counts.presentes === 1 ? 'presente' : 'presentes'}</span>
+          </div>` : ''}
+        `;
+      }
+
+      // Update modal subtitle
+      if (currentDate === dateStr) updateModalSub(counts);
+
+      // Update footer totals
+      lunchData[dateStr] = counts;
+      let totalC = 0, totalP = 0, dias = 0;
+      Object.values(lunchData).forEach(c => {
+        if (c.confirmados > 0) { totalC += c.confirmados; totalP += c.presentes; dias++; }
+      });
+      document.getElementById('statConfirmados').textContent = totalC;
+      document.getElementById('statPresentes').textContent   = totalP;
+      document.getElementById('statDias').textContent        = dias;
+    }
+
+    // ── Close modal ───────────────────────────────────────────────
     function closeModal() {
       document.getElementById('modalOverlay').classList.remove('open');
+      currentDate = null;
     }
 
     // ── Helpers ───────────────────────────────────────────────────
@@ -642,10 +744,7 @@
     document.getElementById('modalOverlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('modalOverlay')) closeModal();
     });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
-    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
     // ── Init ──────────────────────────────────────────────────────
     renderCalendar();
