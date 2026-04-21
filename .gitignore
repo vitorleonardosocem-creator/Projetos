@@ -24,6 +24,17 @@ env/
 # Node
 node_modules/
 
+# Visual Studio
+.vs/
+
+# Runtime state
+alert_state.json
+jarvis_log.txt
+jarvis_memory.json
+
+# Env files with secrets
+.env
+
 # OS
 .DS_Store
 Thumbs.db

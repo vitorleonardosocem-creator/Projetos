@@ -1,0 +1,7 @@
+Abrir CMD como ADMINISTRADOR:
+
+ir ate a pasta - > cd C:\Ferramentas_SOCEM\printer_monitor
+
+
+ligar o servidor -> python monitor.py
+

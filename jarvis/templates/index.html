@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- FUNDO ANIMADO -->
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="layout">
+
+  <!-- PAINEL ESQUERDO: AVATAR -->
+  <div class="avatar-panel">
+    <div class="avatar-container">
+      <div class="avatar-rings">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+      </div>
+      <div class="avatar-core" id="avatarCore">
+        <div class="avatar-eye"></div>
+        <div class="arc-reactor">
+          <div class="arc-inner"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">Pronto</span>
+    </div>
+
+    <div class="system-info">
+      <div class="info-line">JARVIS <span class="accent">v3.0</span></div>
+      <div class="info-line">Stark Industries</div>
+      <div class="info-line" id="timeDisplay">--:--:--</div>
+    </div>
+
+    <!-- TOOL LOG -->
+    <div class="tool-log" id="toolLog">
+      <div class="tool-log-title">⚙ SISTEMA</div>
+      <div id="toolEntries"></div>
+    </div>
+  </div>
+
+  <!-- PAINEL DIREITO: CHAT -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <span class="header-title">INTERFACE DE COMANDO</span>
+      <button class="btn-icon" onclick="resetChat()" title="Nova conversa">↺</button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message jarvis">
+        <div class="msg-avatar">J</div>
+        <div class="msg-bubble">
+          Sistemas online. Como posso ajudar?
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <!-- WAVEFORM (visível ao gravar) -->
+      <div class="waveform" id="waveform">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <!-- PREVIEW DE IMAGENS -->
+      <div class="image-preview-area" id="imagePreviewArea"></div>
+
+      <div class="input-row">
+        <!-- Botão microfone -->
+        <button class="btn-mic" id="micBtn" onclick="toggleMic()" title="Falar">
+          🎤
+        </button>
+
+        <!-- Botão sempre a ouvir -->
+        <button class="btn-always-listen" id="alwaysListenBtn"
+                onclick="toggleAlwaysListening()" title="Modo sempre a ouvir">
+          👂
+        </button>
+
+        <!-- Botão de imagem -->
+        <button class="btn-attach" id="attachBtn" onclick="triggerImageUpload()" title="Anexar imagem">
+          📎
+        </button>
+        <input type="file" id="imageFileInput" accept="image/*" multiple
+               style="display:none" onchange="handleFileSelect(event)">
+
+        <!-- Input de texto -->
+        <input type="text" id="textInput" placeholder="Escreve aqui ou usa o microfone..."
+               onkeydown="if(event.key==='Enter') sendMessage()">
+
+        <!-- Botão enviar -->
+        <button class="btn-send" onclick="sendMessage()">
+          ➤
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

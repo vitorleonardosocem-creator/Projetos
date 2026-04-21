@@ -1,12 +1,11 @@
 ﻿{% extends "base.html" %}
 {% block content %}
-<div class="mb-3">
-    <button class="btn btn-danger btn-lg"
-            onclick="window.location.href='/'">
+<div class="mb-4 d-flex gap-3">
+    <a href="/" class="text-decoration-none"
+       style="display:flex; align-items:center; gap:10px; padding:12px 24px; background:#fff; border:2px solid #E01F26; color:#E01F26; border-radius:12px; font-weight:700; font-size:15px; letter-spacing:0.03em; box-shadow:0 2px 8px rgba(224,31,38,0.15);">
+        <span>{{ textos.return_crachas }}</span>
+    </a>
 
-       {{ textos.return_crachas }}
-
-    </button>
 </div>
 <div class="container-fluid py-5">
     <div class="row justify-content-center align-items-center g-4">
