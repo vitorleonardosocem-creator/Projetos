@@ -731,9 +731,21 @@ async def admin_pontos_post(
     motivo: str = Form("")
 ):
     try:
+        tarefa = f"manual: {motivo.strip()}" if motivo.strip() else "manual"
         conn = pyodbc.connect(CONN_STR)
         cursor = conn.cursor()
+        # Atualiza pontos_total
         cursor.execute("UPDATE users SET pontos_total = pontos_total + ? WHERE id = ?", (pontos, user_id))
+        # Regista na tabela pontos (para relatórios e histórico)
+        cursor.execute(
+            "INSERT INTO pontos (user_id, tarefa, pontos, data_pontos) VALUES (?, ?, ?, CAST(GETDATE() AS DATE))",
+            (user_id, tarefa[:100], pontos)
+        )
+        # Regista também em eventos
+        cursor.execute(
+            "INSERT INTO eventos (user_id, tipo, pontos) VALUES (?, ?, ?)",
+            (user_id, tarefa[:100], pontos)
+        )
         conn.commit()
     except Exception as e:
         print(f"❌ Erro atribuir pontos: {e}")
@@ -926,14 +938,19 @@ async def loja_get(request: Request):
 
 
 @app.post("/loja/resgatar")
-async def loja_resgatar(user_id: int = Form(...), recompensa_id: int = Form(...)):
+async def loja_resgatar(request: Request, user_id: int = Form(...), recompensa_id: int = Form(...)):
+    # Determina para onde redirecionar após o resgate
+    session = request.state.user
+    destino_ok  = "/minha-area" if session and session.get("tipo") == "user" else "/loja"
+    destino_err = "/minha-area" if session and session.get("tipo") == "user" else "/loja"
+
     try:
         with engine.connect() as conn:
             rec = conn.execute(text(
                 "SELECT nome, custo_pontos FROM recompensas WHERE id = :id AND ativo = 1"
             ), {"id": recompensa_id}).fetchone()
             if not rec:
-                return RedirectResponse("/loja?msg=Recompensa+nao+encontrada", status_code=303)
+                return RedirectResponse(f"{destino_err}?msg=Recompensa+nao+encontrada", status_code=303)
 
             custo = int(rec[1])
             pts_atual = conn.execute(text(
@@ -941,9 +958,9 @@ async def loja_resgatar(user_id: int = Form(...), recompensa_id: int = Form(...)
             ), {"id": user_id}).scalar()
 
             if pts_atual is None:
-                return RedirectResponse("/loja?msg=Utilizador+nao+encontrado", status_code=303)
+                return RedirectResponse(f"{destino_err}?msg=Utilizador+nao+encontrado", status_code=303)
             if int(pts_atual) < custo:
-                return RedirectResponse("/loja?msg=Pontos+insuficientes", status_code=303)
+                return RedirectResponse(f"{destino_err}?msg=Pontos+insuficientes", status_code=303)
 
             # Desconta pontos
             conn.execute(text(
@@ -963,9 +980,9 @@ async def loja_resgatar(user_id: int = Form(...), recompensa_id: int = Form(...)
             """), {"uid": user_id, "tipo": f"loja: {rec[0]}", "pts": -custo})
 
             conn.commit()
-        return RedirectResponse(f"/loja?msg=Resgatado+com+sucesso", status_code=303)
+        return RedirectResponse(f"{destino_ok}?msg=Resgatado+com+sucesso", status_code=303)
     except Exception as e:
-        return RedirectResponse(f"/loja?msg=Erro:{str(e)[:50]}", status_code=303)
+        return RedirectResponse(f"{destino_err}?msg=Erro:{str(e)[:50]}", status_code=303)
 
 
 @app.get("/admin/loja", response_class=HTMLResponse)
@@ -1320,7 +1337,7 @@ async def logout():
 # ═══════════════════════════════════════════════════════════════
 
 @app.get("/minha-area", response_class=HTMLResponse)
-async def minha_area(request: Request):
+async def minha_area(request: Request, msg: str = ""):
     session = request.state.user
     if not session:
         return RedirectResponse("/login")
@@ -1392,6 +1409,7 @@ async def minha_area(request: Request):
         "pos_geral": pos_geral,
         "total_users": int(total_users),
         "recompensas": recompensas,
+        "msg": msg,
     })
 
 
@@ -1509,9 +1527,9 @@ async def recalcular_pontos_total():
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE u
-            SET u.pontos_total = ISNULL(p.soma, 0)
+            SET u.pontos_total = p.soma
             FROM users u
-            LEFT JOIN (
+            INNER JOIN (
                 SELECT user_id, SUM(pontos) AS soma
                 FROM pontos
                 GROUP BY user_id

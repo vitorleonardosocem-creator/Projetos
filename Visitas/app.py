@@ -79,6 +79,35 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
+DASHBOARD_PASSWORD = "socem2026"  # ← muda para a password que quiseres
+
+
+TRADUCOES_GRUPOS = {
+    "en": {
+        "Commercial Team": "Commercial Team",
+        "Manutencao": "Maintenance",
+        "Fabricacao": "Manufacturing",
+        "Logistica": "Logistics",
+        "Compras": "Purchasing",
+        "Qualidade": "Quality",
+        "Centro Ensaios": "Testing Center"
+    },
+    "pt": {
+        "Commercial Team": "Equipa Comercial",
+        "Manutencao": "Manutenção",
+        "Fabricacao": "Fabricação",
+        "Logistica": "Logística",
+        "Compras": "Compras",
+        "Qualidade": "Qualidade",
+        "Centro Ensaios": "Centro de Ensaios"
+    }
+}
+
+def traduzir_grupo(nome: str, lang: str) -> str:
+    traducoes = TRADUCOES_GRUPOS.get(lang, {})
+    return traducoes.get(nome, nome)
+
+
 #  TODOS OS TEXTOS DA APP
 #
 # ALTERAR:
@@ -115,6 +144,17 @@ TEXTOS = {
     "register_supplier": "Registar Fornecedor",
     "email_exemplo": "email@exemplo.com",
     "return_crachas":" ← Voltar ",
+    "entrar_login": "Entrar",
+    "login_introduza_password": "Introduza a password para continuar",
+    "login_password_incorreta": "Password Incorreta. Tente novamente.",
+    "export_confirm_title": "Exportar para Excel",
+    "export_confirm_msg": "Tem a certeza que os filtros estão corretos?",
+    "export_confirm_btn": "Exportar",
+    "export_cancel_btn": "Cancelar",
+    "export_preparing": "A preparar ficheiro...",
+    "export_downloading": "A transferir...",
+    "export_done": "Concluído!",
+    "export_size": "Tamanho estimado",
 
 
     # Texto dos registo de fornecedores e clientes em português
@@ -156,6 +196,17 @@ TEXTOS = {
     "register_supplier": "Register Supplier",
     "email_exemplo": "email@example.com",
     "return_crachas":" ← Return ",
+    "entrar_login": "Enter",
+    "login_introduza_password": "Enter your password to continue.",
+    "login_password_incorreta": "Incorrect password. Please try again.",
+    "export_confirm_title": "Export to Excel",
+    "export_confirm_msg": "Are you sure the filters are correct?",
+    "export_confirm_btn": "Export",
+    "export_cancel_btn": "Cancel",
+    "export_preparing": "Preparing file...",
+    "export_downloading": "Downloading...",
+    "export_done": "Done!",
+    "export_size": "Estimated size",
 
     # Texto dos registo de fornecedores e clientes em inglês
 
@@ -189,10 +240,22 @@ from fastapi import Form
 from fastapi.responses import RedirectResponse
 
 @app.post("/set-language")
-async def set_language(lang: str = Form(...)):
-    response = RedirectResponse(url="/menu", status_code=303)
+async def set_language(lang: str = Form(...), next: str = Form("/menu")):
+    response = RedirectResponse(url=next, status_code=303)
     response.set_cookie("lang", lang, max_age=3600)
     return response
+
+
+@app.post("/dashboard/login")
+async def dashboard_login(request: Request, password: str = Form(...)):
+    if password == DASHBOARD_PASSWORD and password != "":
+        return RedirectResponse(url="/dashboard/view", status_code=303)
+    return templates.TemplateResponse("dashboard_login.html", {
+        "request": request,
+        "textos": get_textos(request),
+        "erro": True
+    })
+
 
 
 # GUARDA COOKIES
@@ -213,6 +276,7 @@ async def selecionar_grupo(
     tipo: str = Form(...),
     grupoid_query: Optional[str] = Query(None)  # ← FALLBACK
 ):
+    print(f"🍪 selecionar-grupo recebido → grupoid='{grupoid}' | tipo='{tipo}'")
     grupoid_final = grupoid or grupoid_query
     if not grupoid:
          raise HTTPException(400, "Grupo inválido!")
@@ -306,9 +370,10 @@ async def pagina_clientes(request: Request):
         print("RESPONSAVEL:", responsavel)
 
         if responsavel:
+            lang = request.cookies.get("lang", "pt")
             grupos_unicos[responsavel] = {
                 "id": responsavel,
-                "nome": responsavel
+                "nome": traduzir_grupo(responsavel, lang)
             }
 
     grupos = list(grupos_unicos.values())
@@ -367,9 +432,10 @@ async def pagina_fornecedores(request: Request):
             responsavel = v[3] if len(v) > 3 else None
 
         if responsavel:
-            grupos_unicos[responsavel] = {
+           lang = request.cookies.get("lang", "pt")
+           grupos_unicos[responsavel] = {
                 "id": responsavel,
-                "nome": responsavel,
+                "nome": traduzir_grupo(responsavel, lang),
                 "textos": get_textos(request)
             }
 
@@ -383,6 +449,126 @@ async def pagina_fornecedores(request: Request):
         "textos": get_textos(request)
 
     }) 
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request, lang: str = Query(None)):
+    if lang:
+        textos = TEXTOS['en'] if lang == 'en' else TEXTOS['pt']
+    else:
+        textos = get_textos(request)
+    return templates.TemplateResponse("dashboard_login.html", {
+        "request": request,
+        "textos": textos,
+        "erro": False
+    })
+
+@app.get("/dashboard/view", response_class=HTMLResponse)
+async def dashboard_view(request: Request, lang: str = Query(None)):
+    if lang:
+        textos = TEXTOS['en'] if lang == 'en' else TEXTOS['pt']
+    else:
+        textos = get_textos(request)
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "textos": textos,
+        "lang": lang or request.cookies.get("lang", "pt"),
+        "erro": False
+    })
+
+
+
+
+@app.get("/api/dashboard/dados")
+async def dashboard_dados():
+    """
+    Devolve todas as visitas dos últimos 365 dias
+    para o dashboard filtrar no browser.
+    
+    Junta Visitantes (clientes) + Visitantes_Fornecedores (fornecedores)
+    """
+    try:
+        dados = []
+
+        with getconn() as conn:
+            cur = conn.cursor()
+
+            # Clientes
+            cur.execute("""
+                SELECT 
+                    Nome,
+                    Empresa,
+                    ISNULL(Responsavel, 'Sem responsável') AS Responsavel,
+                    CAST(Data AS DATE) AS Data,
+                    ISNULL(DataCheckIn, NULL) AS DataCheckIn,
+                    PreConfirmado
+                FROM Visitantes
+                WHERE Data >= DATEADD(DAY, -365, GETDATE())
+                  AND Nome IS NOT NULL
+                  AND Empresa IS NOT NULL
+            """)
+            for row in cur.fetchall():
+                nome, empresa, responsavel, data, data_checkin, pre_confirmado = row
+
+                # hora do check-in (se existir)
+                hora = None
+                if data_checkin:
+                    try:
+                        hora = data_checkin.hour
+                    except Exception:
+                        hora = None
+
+                dados.append({
+                    "nome": nome or "",
+                    "empresa": empresa or "",
+                    "responsavel": responsavel or "",
+                    "data": str(data),
+                    "hora": hora,
+                    "confirmado": pre_confirmado == "SIM",
+                    "tipo": "clientes"
+                })
+
+            # Fornecedores
+            cur.execute("""
+                SELECT 
+                    Nome,
+                    Empresa,
+                    ISNULL(Responsavel, 'Sem responsável') AS Responsavel,
+                    CAST(Data AS DATE) AS Data,
+                    ISNULL(DataCheckIn, NULL) AS DataCheckIn,
+                    PreConfirmado
+                FROM Visitantes_Fornecedores
+                WHERE Data >= DATEADD(DAY, -365, GETDATE())
+                  AND Nome IS NOT NULL
+                  AND Empresa IS NOT NULL
+            """)
+            for row in cur.fetchall():
+                nome, empresa, responsavel, data, data_checkin, pre_confirmado = row
+
+                hora = None
+                if data_checkin:
+                    try:
+                        hora = data_checkin.hour
+                    except Exception:
+                        hora = None
+
+                dados.append({
+                    "nome": nome or "",
+                    "empresa": empresa or "",
+                    "responsavel": responsavel or "",
+                    "data": str(data),
+                    "hora": hora,
+                    "confirmado": pre_confirmado == "SIM",
+                    "tipo": "fornecedores"
+                })
+
+        print(f"📊 Dashboard: {len(dados)} registos devolvidos")
+        return dados
+
+    except Exception as e:
+        print(f"❌ Erro dashboard: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
    
 import tempfile
@@ -418,11 +604,20 @@ async def checkin_visitante(
         cookies = dict(request.cookies)
         print(f"🍪 COOKIES: {cookies}")
 
-        grupoid_nome = cookies.get("grupoid")  # ex: "Emilio Vigia"
-        tipo = cookies.get("tipo")
+        grupoid_nome = cookies.get("grupoid")
 
-        if tipo not in ["clientes", "fornecedores"]:
-            tipo = "fornecedores"
+        # Detectar tipo automaticamente pela BD
+        tipo = "clientes"  # default
+        with getconn() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT COUNT(*) FROM Visitantes_Fornecedores 
+                WHERE Id=? AND CAST(Data AS DATE)=CAST(GETDATE() AS DATE)
+            """, (visitanteid,))
+            if cur.fetchone()[0] > 0:
+                tipo = "fornecedores"
+
+        print(f"🔍 tipo detetado automaticamente: '{tipo}'")
 
         print(f"DEBUG → visitante={visitanteid} | grupo={grupoid_nome} | tipo={tipo}")
 
@@ -557,7 +752,19 @@ async def label_existente(visitante_id: int, request: Request):
         cookies = dict(request.cookies)
 
         grupoid_nome = cookies.get("grupoid")
-        tipo = cookies.get("tipo", "fornecedores")
+        tipo = "clientes"
+        with getconn() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT COUNT(*) FROM Visitantes_Fornecedores 
+                WHERE Id=? AND CAST(Data AS DATE)=CAST(GETDATE() AS DATE)
+            """, (visitante_id,))
+            if cur.fetchone()[0] > 0:   
+                tipo = "fornecedores"
+
+        print(f"🔍 tipo detetado automaticamente: '{tipo}'")
+
+        print(f"🔍 DEBUG label-existente → tipo='{tipo}' | grupoid='{grupoid_nome}'")
 
         if not grupoid_nome:
             raise HTTPException(status_code=400, detail="Selecione equipa primeiro!")
@@ -1194,12 +1401,15 @@ def enviaremailcheckin(config, emailsdestino: list, nome: str, empresa: str, gru
     email_from = config["email"]
     password = config["password"]
     
-    if tipo == "clientes":
+    tipo_normalizado = str(tipo).lower().strip()
+    if "cliente" in tipo_normalizado:
         tipo_texto = "Cliente"
-    elif tipo == "fornecedores":
+    elif "fornecedor" in tipo_normalizado:
         tipo_texto = "Fornecedor"
     else:
         tipo_texto = "Visitante"
+
+        print(f"📧 tipo recebido='{tipo}' → vai enviar como '{tipo_texto}'")
 
     assunto = f"Confirmação de Presença de {tipo_texto}"
     hora_atual = datetime.now().strftime('%d/%m/%Y %H:%M')

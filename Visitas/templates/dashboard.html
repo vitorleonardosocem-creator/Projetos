@@ -1,0 +1,770 @@
+<title>Dashboard - SOCEM</title>
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-3 d-flex align-items-center gap-3">
+    <a href="/"
+       style="display:flex; align-items:center; gap:12px; padding:16px 32px; background:#fff; border:2px solid #E01F26; color:#E01F26; border-radius:12px; font-weight:700; font-size:16px; box-shadow:0 2px 8px rgba(224,31,38,0.15); text-decoration:none; width:fit-content;">
+        {{ textos.back }}
+    </a>
+
+    <!-- Seletor de idioma -->
+    <div style="position:relative;">
+        <div onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'"
+             style="display:flex; align-items:center; gap:8px; padding:10px 16px; background:#fff; border:2px solid #ccc; border-radius:10px; cursor:pointer; font-size:14px; color:#555;">
+            <img src="/static/imagens/{% if lang == 'en' %}gb{% else %}pt{% endif %}.png" width="24" style="border-radius:3px;">
+            <span>▼</span>
+        </div>
+        <div style="display:none; position:absolute; top:110%; left:0; background:#fff; border:2px solid #ccc; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:99; min-width:120px;">
+            <!-- PT -->
+            <form method="get" action="/dashboard/view">
+                <input type="hidden" name="lang" value="pt">
+                <button type="submit" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; background:#fff; border:none; cursor:pointer; font-size:14px; color:#333;">
+                    <img src="/static/imagens/pt.png" width="24" style="border-radius:3px;"> PT
+                </button>
+            </form>
+            <form method="get" action="/dashboard/view">
+                <input type="hidden" name="lang" value="en">
+                <button type="submit" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; background:#fff; border:none; cursor:pointer; font-size:14px; color:#333;">
+                    <img src="/static/imagens/gb.png" width="24" style="border-radius:3px;"> EN
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="container-fluid">
+
+    <!-- FILTROS -->
+    <div class="row mb-3">
+        <div class="col-auto d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+                <label class="text-muted small mb-0">{{ textos.date }}:</label>
+                <select id="filtro-periodo" class="form-select form-select-sm" onchange="renderTudo()" style="width:160px;">
+                    <option value="7">{% if textos.app_title == 'SOCEM Visitors' %}Last 7 days{% else %}Últimos 7 dias{% endif %}</option>
+                    <option value="30" selected>{% if textos.app_title == 'SOCEM Visitors' %}Last 30 days{% else %}Últimos 30 dias{% endif %}</option>
+                    <option value="90">{% if textos.app_title == 'SOCEM Visitors' %}Last 90 days{% else %}Últimos 90 dias{% endif %}</option>
+                    <option value="365">{% if textos.app_title == 'SOCEM Visitors' %}Last year{% else %}Último ano{% endif %}</option>
+                </select>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <label class="text-muted small mb-0">{{ textos.action }}:</label>
+                <select id="filtro-tipo" class="form-select form-select-sm" onchange="renderTudo()" style="width:160px;">
+                    <option value="todos">{% if textos.app_title == 'SOCEM Visitors' %}All{% else %}Todos{% endif %}</option>
+                    <option value="clientes">{{ textos.client_title }}</option>
+                    <option value="fornecedores">{{ textos.supplier_title }}</option>
+                </select>
+            </div>
+            <button onclick="exportarExcel()"
+                    style="display:flex; align-items:center; gap:8px; padding:8px 20px; background:#fff; border:2px solid #E01F26; color:#E01F26; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer;">
+                📥 {% if textos.app_title == 'SOCEM Visitors' %}Export to Excel{% else %}Exportar Excel{% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- MÉTRICAS -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 bg-light h-100 p-3">
+                <div class="text-muted small text-uppercase" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Total visits{% else %}Total visitas{% endif %}
+                </div>
+                <div class="fw-bold mt-1" style="font-size:28px;" id="m-total">—</div>
+                <div class="text-muted small" id="m-periodo-sub"></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 bg-light h-100 p-3">
+                <div class="text-muted small text-uppercase" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Confirmed check-ins{% else %}Check-ins confirmados{% endif %}
+                </div>
+                <div class="fw-bold mt-1" style="font-size:28px;" id="m-checkin">—</div>
+                <div class="text-muted small" id="m-checkin-sub"></div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 bg-light h-100 p-3">
+                <div class="text-muted small text-uppercase" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Distinct companies{% else %}Empresas distintas{% endif %}
+                </div>
+                <div class="fw-bold mt-1" style="font-size:28px;" id="m-empresas">—</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 bg-light h-100 p-3">
+                <div class="text-muted small text-uppercase" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Daily average{% else %}Média diária{% endif %}
+                </div>
+                <div class="fw-bold mt-1" style="font-size:28px;" id="m-media">—</div>
+                <div class="text-muted small">{% if textos.app_title == 'SOCEM Visitors' %}visits/day{% else %}visitas/dia{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRÁFICOS LINHA 1 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border p-3">
+                <div class="text-muted small text-uppercase fw-bold mb-3" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Top companies{% else %}Top empresas{% endif %}
+                </div>
+                <div style="position:relative;height:240px;">
+                    <canvas id="cv-empresas" role="img" aria-label="Visitas por empresa"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border p-3">
+                <div class="text-muted small text-uppercase fw-bold mb-3" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Visits by contact person{% else %}Visitas por responsável{% endif %}
+                </div>
+                <div style="position:relative;height:240px;">
+                    <canvas id="cv-resp" role="img" aria-label="Visitas por responsável"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRÁFICOS LINHA 2 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border p-3">
+                <div class="text-muted small text-uppercase fw-bold mb-3" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Daily evolution{% else %}Evolução diária{% endif %}
+                </div>
+                <div style="position:relative;height:200px;">
+                    <canvas id="cv-evolucao" role="img" aria-label="Evolução diária"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border p-3">
+                <div class="text-muted small text-uppercase fw-bold mb-3" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Peak hours{% else %}Horas de pico{% endif %}
+                </div>
+                <div style="position:relative;height:200px;">
+                    <canvas id="cv-horas" role="img" aria-label="Horas de pico"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LINHA 3 -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <div class="card border p-3">
+                <div class="text-muted small text-uppercase fw-bold mb-3" style="font-size:11px;letter-spacing:.04em;">
+                    {% if textos.app_title == 'SOCEM Visitors' %}Company ranking{% else %}Ranking empresas{% endif %}
+                </div>
+                <div id="top-empresas"></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border p-3">
+                <div class="text-muted small text-uppercase fw-bold mb-3" style="font-size:11px;letter-spacing:.04em;">
+                    {{ textos.client_title }} vs {{ textos.supplier_title }}
+                </div>
+                <div style="position:relative;height:180px;">
+                    <canvas id="cv-tipo" role="img" aria-label="Clientes vs Fornecedores"></canvas>
+                </div>
+                <div id="legenda-tipo" class="d-flex gap-3 mt-2 small text-muted flex-wrap"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<!-- MODAL CONFIRMAÇÃO EXPORT -->
+<div id="modal-export" style="display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center;">
+    <!-- Backdrop -->
+    <div onclick="fecharModal()" style="position:absolute; inset:0; background:rgba(0,0,0,0.35); backdrop-filter:blur(3px);"></div>
+
+    <!-- Caixa -->
+    <div onclick="event.stopPropagation()"
+         style="
+        position:relative;
+        background:#fff;
+        border-radius:18px;
+        padding:56px 52px;
+        width:620px;
+        max-width:94vw;
+        box-shadow:0 20px 60px rgba(0,0,0,0.2);
+        text-align:center;
+        animation: popIn 0.2s ease;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:20px;
+ ">
+
+        <!-- Ícone -->
+        <div style="width:56px; height:56px; background:#FEF2F2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#E01F26" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+        </div>
+
+        <!-- Título -->
+        <div style="font-size:17px; font-weight:700; color:#111; margin-bottom:10px;">
+            {{ textos.export_confirm_title }}
+        </div>
+
+        <!-- Filtros selecionados -->
+        <div id="modal-filtros-info" style="font-size:13px; color:#666; background:#F9F9F9; border-radius:10px; padding:12px 16px; margin-bottom:8px; line-height:1.8;"></div>
+
+        <!-- Mensagem -->
+        <div style="font-size:13px; color:#888; margin-bottom:24px;">
+            {{ textos.export_confirm_msg }}
+        </div>
+
+        <!-- Botões -->
+        <div style="display:flex; gap:10px;">
+            <button onclick="fecharModal()"
+                    style="flex:1; padding:12px; background:#fff; border:2px solid #ddd; color:#555; border-radius:10px; font-weight:600; font-size:14px; cursor:pointer;">
+                {{ textos.export_cancel_btn }}
+            </button>
+            <button onclick="confirmarExport()"
+                    style="flex:1; padding:12px; background:#E01F26; border:2px solid #E01F26; color:#fff; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 12px rgba(224,31,38,0.3);">
+                 {{ textos.export_confirm_btn }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LOADING EXPORT -->
+<div id="modal-loading-export" onclick="fecharLoadingClick(event)" style="display:none; position:fixed; inset:0; z-index:10001; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px);"></div>
+    <div onclick="event.stopPropagation()"
+         style="
+    position:relative;
+    background:#fff;
+    border-radius:18px;
+    padding:48px 44px;
+    width:520px;
+    max-width:92vw;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25);
+    text-align:center;
+    animation: popIn 0.2s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+ ">
+        <div style="width:60px; height:60px; margin:0 auto 20px; position:relative;">
+            <svg viewBox="0 0 60 60" style="width:60px;height:60px;">
+                <circle cx="30" cy="30" r="26" fill="none" stroke="#F2F2F2" stroke-width="5" />
+                <circle cx="30" cy="30" r="26" fill="none" stroke="#E01F26" stroke-width="5"
+                        stroke-linecap="round" stroke-dasharray="163" stroke-dashoffset="163"
+                        id="progress-circle"
+                        style="transform:rotate(-90deg); transform-origin:center; transition: stroke-dashoffset 0.4s ease;" />
+            </svg>
+            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#E01F26;" id="progress-pct">0%</div>
+        </div>
+        <div id="loading-titulo" style="font-size:18px; font-weight:700; color:#111; text-align:center;">
+            {{ textos.export_preparing }}
+        </div>
+        <div style="font-size:12px; color:#aaa; margin-bottom:20px;" id="loading-sub">SOCEM Dashboard</div>
+        <div style="background:#F2F2F2; border-radius:999px; height:8px; overflow:hidden; margin-bottom:8px;">
+            <div id="progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #E01F26, #ff6b6b); border-radius:999px; transition: width 0.4s ease;"></div>
+        </div>
+        <div style="font-size:11px; color:#bbb;" id="loading-step">—</div>
+    </div>
+</div>
+
+<style>
+    @keyframes popIn {
+        from {
+            transform: scale(0.92);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+
+
+
+
+<div id="loading" style="position:fixed;inset:0;background:rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;font-size:16px;color:#555;z-index:9999;">
+    {{ textos.loading }}
+</div>
+
+<style>
+    .btn-danger {
+        background-color: #E01F26 !important;
+        border-color: #E01F26 !important;
+    }
+
+    .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+        .bar-row .name {
+            font-size: 13px;
+            color: #333;
+            min-width: 130px;
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .bar-row .bar-wrap {
+            flex: 1;
+            background: #f0f0f0;
+            border-radius: 4px;
+            height: 18px;
+            overflow: hidden;
+        }
+
+        .bar-row .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: #E01F26;
+            transition: width 0.4s;
+        }
+
+        .bar-row .count {
+            font-size: 13px;
+            color: #888;
+            min-width: 26px;
+            text-align: right;
+        }
+</style>
+
+
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
+<script>
+
+    function fecharLoadingClick(e) {
+        // só fecha se estiver a 100%
+        const pct = document.getElementById('progress-pct').textContent;
+
+        if (pct === '100%') {
+            fecharLoading();
+        }
+    }
+
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+let DADOS = [];
+    let charts = {};
+
+
+    function exportarExcel() {
+        const periodo = document.getElementById('filtro-periodo').value;
+        const tipo = document.getElementById('filtro-tipo').value;
+
+        // Etiquetas legíveis
+        const periodoLabel = {
+            '7': '{% if textos.app_title == "SOCEM Visitors" %}Last 7 days{% else %}Últimos 7 dias{% endif %}',
+            '30': '{% if textos.app_title == "SOCEM Visitors" %}Last 30 days{% else %}Últimos 30 dias{% endif %}',
+            '90': '{% if textos.app_title == "SOCEM Visitors" %}Last 90 days{% else %}Últimos 90 dias{% endif %}',
+            '365': '{% if textos.app_title == "SOCEM Visitors" %}Last year{% else %}Último ano{% endif %}',
+        }[periodo];
+
+        const tipoLabel = {
+            'todos': '{% if textos.app_title == "SOCEM Visitors" %}All{% else %}Todos{% endif %}',
+            'clientes': '{{ textos.client_title }}',
+            'fornecedores': '{{ textos.supplier_title }}',
+        }[tipo];
+
+        const dados = filtrarDados();
+
+        const tamanhoEstimadoKB = Math.round(dados.length * 0.45);
+        const tamanhoLabel = tamanhoEstimadoKB < 1024
+            ? tamanhoEstimadoKB + ' KB'
+            : (tamanhoEstimadoKB / 1024).toFixed(1) + ' MB';
+
+        document.getElementById('modal-filtros-info').innerHTML =
+            ` <b>{% if textos.app_title == "SOCEM Visitors" %}Period{% else %}Período{% endif %}:</b> ${periodoLabel}<br>
+      <b>{% if textos.app_title == "SOCEM Visitors" %}Type{% else %}Tipo{% endif %}:</b> ${tipoLabel}<br>
+      <b>{% if textos.app_title == "SOCEM Visitors" %}Records{% else %}Registos{% endif %}:</b> ${dados.length}<br>
+      <b>{{ textos.export_size }}:</b> ~${tamanhoLabel}`;
+
+        const modal = document.getElementById('modal-export');
+        modal.style.display = 'flex';
+    }
+
+    function fecharModal() {
+        document.getElementById('modal-export').style.display = 'none';
+    }
+
+    function abrirLoading() {
+        document.getElementById('modal-loading-export').style.display = 'flex';
+        setProgresso(0, '{{ textos.export_preparing }}', '—');
+    }
+
+    function fecharLoading() {
+        document.getElementById('modal-loading-export').style.display = 'none';
+    }
+
+    function setProgresso(pct, titulo, sub) {
+        const circle = document.getElementById('progress-circle');
+        const bar = document.getElementById('progress-bar');
+        const pctEl = document.getElementById('progress-pct');
+        const titEl = document.getElementById('loading-titulo');
+        const subEl = document.getElementById('loading-step');
+
+        const circunferencia = 163;
+        circle.style.strokeDashoffset = circunferencia - (pct / 100) * circunferencia;
+        bar.style.width = pct + '%';
+        pctEl.textContent = pct + '%';
+        titEl.textContent = titulo;
+        subEl.textContent = sub;
+    }
+
+    async function confirmarExport() {
+        fecharModal();
+        abrirLoading();
+
+        const dados = filtrarDados();
+        const periodo = document.getElementById('filtro-periodo').value;
+        const tipo = document.getElementById('filtro-tipo').value;
+
+        const VERMELHO = 'FFE01F26';
+        const CINZA = 'FFF2F2F2';
+        const BRANCO = 'FFFFFFFF';
+        const PRETO = 'FF000000';
+
+        function estiloHeader(sheet, colunas) {
+            const row = sheet.getRow(1);
+            row.eachCell(cell => {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: VERMELHO } };
+                cell.font = { bold: true, color: { argb: BRANCO }, size: 11 };
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                cell.border = { bottom: { style: 'thin', color: { argb: BRANCO } } };
+            });
+            row.height = 28;
+            colunas.forEach(({ key, width }) => { sheet.getColumn(key).width = width; });
+        }
+
+        function estiloLinhas(sheet, total) {
+            for (let i = 2; i <= total + 1; i++) {
+                const row = sheet.getRow(i);
+                const bg = i % 2 === 0 ? CINZA : BRANCO;
+                row.eachCell({ includeEmpty: true }, cell => {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+                    cell.font = { size: 10, color: { argb: PRETO } };
+                    cell.alignment = { vertical: 'middle' };
+                });
+                row.height = 20;
+            }
+        }
+
+        await new Promise(r => setTimeout(r, 50));
+        setProgresso(10, '{{ textos.export_preparing }}', '{% if textos.app_title == "SOCEM Visitors" %}Building visits sheet...{% else %}A construir aba Visitas...{% endif %}');
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'SOCEM';
+        wb.created = new Date();
+
+        // ABA 1
+        const s1 = wb.addWorksheet('Visitas');
+        s1.columns = [
+            { header: 'Nome', key: 'nome', width: 28 },
+            { header: 'Empresa', key: 'empresa', width: 28 },
+            { header: 'Responsável', key: 'responsavel', width: 22 },
+            { header: 'Data', key: 'data', width: 14 },
+            { header: 'Hora', key: 'hora', width: 10 },
+            { header: 'Confirmado', key: 'confirmado', width: 14 },
+            { header: 'Tipo', key: 'tipo', width: 14 },
+        ];
+        dados.forEach(v => {
+            const row = s1.addRow({
+                nome: v.nome, empresa: v.empresa, responsavel: v.responsavel,
+                data: v.data, hora: v.hora !== null ? v.hora + 'h' : '',
+                confirmado: v.confirmado ? 'SIM' : 'NÃO',
+                tipo: v.tipo === 'clientes' ? 'Cliente' : 'Fornecedor'
+            });
+            const cellConf = row.getCell('confirmado');
+            cellConf.font = { bold: true, size: 10, color: { argb: v.confirmado ? 'FF16A34A' : VERMELHO } };
+        });
+        estiloHeader(s1, s1.columns);
+        estiloLinhas(s1, dados.length);
+
+        await new Promise(r => setTimeout(r, 50));
+        setProgresso(40, '{{ textos.export_preparing }}', '{% if textos.app_title == "SOCEM Visitors" %}Building companies sheet...{% else %}A construir aba Empresas...{% endif %}');
+
+        // ABA 2
+        const s2 = wb.addWorksheet('Top Empresas');
+        s2.columns = [
+            { header: 'Empresa', key: 'empresa', width: 32 },
+            { header: 'Visitas', key: 'visitas', width: 14 },
+        ];
+        const topEmp = topN(dados, 'empresa', 20);
+        const maxEmp = topEmp[0]?.[1] || 1;
+        topEmp.forEach(([empresa, total]) => s2.addRow({ empresa, visitas: total }));
+        estiloHeader(s2, s2.columns);
+        estiloLinhas(s2, topEmp.length);
+        for (let i = 2; i <= topEmp.length + 1; i++) {
+            const val = topEmp[i - 2]?.[1] || 0;
+            const intensidade = Math.round((val / maxEmp) * 180);
+            const hex = (255 - intensidade).toString(16).padStart(2, '0').toUpperCase();
+            s2.getRow(i).getCell('visitas').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: `FFE0${hex}${hex}` } };
+            s2.getRow(i).getCell('visitas').alignment = { horizontal: 'center' };
+        }
+
+        await new Promise(r => setTimeout(r, 50));
+        setProgresso(60, '{{ textos.export_preparing }}', '{% if textos.app_title == "SOCEM Visitors" %}Building contacts sheet...{% else %}A construir aba Responsáveis...{% endif %}');
+
+        // ABA 3
+        const s3 = wb.addWorksheet('Por Responsável');
+        s3.columns = [
+            { header: 'Responsável', key: 'responsavel', width: 28 },
+            { header: 'Visitas', key: 'visitas', width: 14 },
+        ];
+        const topResp = topN(dados, 'responsavel', 20);
+        topResp.forEach(([resp, total]) => s3.addRow({ responsavel: resp, visitas: total }));
+        estiloHeader(s3, s3.columns);
+        estiloLinhas(s3, topResp.length);
+
+        await new Promise(r => setTimeout(r, 50));
+        setProgresso(80, '{{ textos.export_preparing }}', '{% if textos.app_title == "SOCEM Visitors" %}Building peak hours sheet...{% else %}A construir aba Horas de Pico...{% endif %}');
+
+        // ABA 4
+        const s4 = wb.addWorksheet('Horas de Pico');
+        s4.columns = [
+            { header: 'Hora', key: 'hora', width: 12 },
+            { header: 'Check-ins', key: 'checkins', width: 14 },
+        ];
+        const horaVals = [];
+        for (let h = 7; h <= 18; h++) {
+            const count = dados.filter(v => v.confirmado && v.hora === h).length;
+            horaVals.push({ hora: h + 'h', checkins: count });
+            s4.addRow({ hora: h + 'h', checkins: count });
+        }
+        estiloHeader(s4, s4.columns);
+        estiloLinhas(s4, horaVals.length);
+        const maxHora = Math.max(...horaVals.map(h => h.checkins), 1);
+        for (let i = 2; i <= horaVals.length + 1; i++) {
+            const val = horaVals[i - 2].checkins;
+            const ratio = val / maxHora;
+            const cell = s4.getRow(i).getCell('checkins');
+            cell.alignment = { horizontal: 'center' };
+            if (ratio > 0.7) cell.font = { bold: true, size: 10, color: { argb: VERMELHO } };
+            else if (ratio > 0.4) cell.font = { bold: true, size: 10, color: { argb: 'FFF59E0B' } };
+            else cell.font = { size: 10, color: { argb: 'FF10B981' } };
+        }
+
+        setProgresso(90, '{{ textos.export_downloading }}', '{% if textos.app_title == "SOCEM Visitors" %}Generating file...{% else %}A gerar ficheiro...{% endif %}');
+        await new Promise(r => setTimeout(r, 100));
+
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const data = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `SOCEM_Dashboard_${periodo}d_${tipo}_${data}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        setProgresso(
+            100,
+            '{{ textos.export_done }}',
+            `{% if textos.app_title == "SOCEM Visitors" %}Click anywhere to close{% else %}Clique em qualquer lado para fechar{% endif %}`
+        );
+        await new Promise(r => setTimeout(r, 800));
+        
+    }
+
+
+
+async function carregarDados() {
+    try {
+        const r = await fetch('/api/dashboard/dados');
+        DADOS = await r.json();
+    } catch(e) {
+        console.error('Erro:', e);
+        DADOS = [];
+    }
+    document.getElementById('loading').style.display = 'none';
+    renderTudo();
+}
+
+function filtrarDados() {
+    const dias = parseInt(document.getElementById('filtro-periodo').value);
+    const tipo = document.getElementById('filtro-tipo').value;
+    const corte = new Date();
+    corte.setDate(corte.getDate() - dias);
+    corte.setHours(0,0,0,0);
+    return DADOS.filter(v => {
+        const d = new Date(v.data);
+        return d >= corte && (tipo === 'todos' || v.tipo === tipo);
+    });
+}
+
+function topN(dados, key, n) {
+    const map = {};
+    dados.forEach(v => { map[v[key]] = (map[v[key]] || 0) + 1; });
+    return Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0, n);
+}
+
+function destroyChart(id) {
+    if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function renderMetrics(dados) {
+    const dias = parseInt(document.getElementById('filtro-periodo').value);
+    const total = dados.length;
+    const confirmados = dados.filter(v => v.confirmado).length;
+    const empresas = new Set(dados.map(v => v.empresa)).size;
+    const media = total > 0 ? (total / dias).toFixed(1) : '0';
+    const pct = total > 0 ? Math.round(confirmados / total * 100) : 0;
+    document.getElementById('m-total').textContent = total;
+    document.getElementById('m-periodo-sub').textContent = dias + 'd';
+    document.getElementById('m-checkin').textContent = confirmados;
+    document.getElementById('m-checkin-sub').textContent = pct + '%';
+    document.getElementById('m-empresas').textContent = empresas;
+    document.getElementById('m-media').textContent = media;
+}
+
+function renderBarChart(canvasId, labels, values, color) {
+    destroyChart(canvasId);
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ data: values, backgroundColor: color, borderRadius: 4, borderSkipped: false }] },
+        options: {
+            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 }, color: '#888' } },
+                y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#444' } }
+            }
+        }
+    });
+}
+
+function renderEvolucao(dados) {
+    destroyChart('cv-evolucao');
+    const ctx = document.getElementById('cv-evolucao');
+    if (!ctx) return;
+    const dias = parseInt(document.getElementById('filtro-periodo').value);
+    const buckets = {};
+    for (let i = dias - 1; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        buckets[d.toISOString().slice(0,10)] = 0;
+    }
+    dados.forEach(v => {
+        const k = new Date(v.data).toISOString().slice(0,10);
+        if (buckets[k] !== undefined) buckets[k]++;
+    });
+    const allKeys = Object.keys(buckets);
+    const step = dias > 60 ? Math.ceil(dias / 25) : 1;
+    const keys = allKeys.filter((_, i) => i % step === 0);
+    const labels = keys.map(k => { const d = new Date(k); return (d.getMonth()+1)+'/'+(d.getDate()); });
+    const vals = keys.map(k => buckets[k]);
+    charts['cv-evolucao'] = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ data: vals, borderColor: '#E01F26', backgroundColor: 'rgba(224,31,38,0.08)', tension: 0.3, fill: true, pointRadius: dias > 30 ? 0 : 3 }] },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#888', maxTicksLimit: 12, autoSkip: true } },
+                y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, color: '#888', stepSize: 1 } }
+            }
+        }
+    });
+}
+
+function renderHoras(dados) {
+    destroyChart('cv-horas');
+    const ctx = document.getElementById('cv-horas');
+    if (!ctx) return;
+    const horas = Array(12).fill(0);
+    dados.forEach(v => {
+        if (v.confirmado && v.hora !== null && v.hora >= 7 && v.hora <= 18) horas[v.hora - 7]++;
+    });
+    const max = Math.max(...horas, 1);
+    const colors = horas.map(h => {
+        const r = h / max;
+        if (r > 0.7) return '#E01F26';
+        if (r > 0.4) return '#f59e0b';
+        return '#10b981';
+    });
+    charts['cv-horas'] = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: Array.from({length:12}, (_,i) => (i+7)+'h'), datasets: [{ data: horas, backgroundColor: colors, borderRadius: 3, borderSkipped: false }] },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#888' } },
+                y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, color: '#888', stepSize: 1 } }
+            }
+        }
+    });
+}
+
+function renderTipo(dados) {
+    destroyChart('cv-tipo');
+    const ctx = document.getElementById('cv-tipo');
+    if (!ctx) return;
+    const cl = dados.filter(v => v.tipo === 'clientes').length;
+    const fn = dados.filter(v => v.tipo === 'fornecedores').length;
+    const total = cl + fn;
+    charts['cv-tipo'] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['{{ textos.client_title }}', '{{ textos.supplier_title }}'],
+            datasets: [{ data: [cl, fn], backgroundColor: ['#E01F26', '#333'], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' }
+    });
+    document.getElementById('legenda-tipo').innerHTML =
+        `<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#E01F26;display:inline-block;"></span>{{ textos.client_title }} ${total > 0 ? Math.round(cl/total*100) : 0}% (${cl})</span>
+         <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#333;display:inline-block;"></span>{{ textos.supplier_title }} ${total > 0 ? Math.round(fn/total*100) : 0}% (${fn})</span>`;
+}
+
+function renderTopEmpresas(dados) {
+    const top = topN(dados, 'empresa', 10);
+    const max = top.length > 0 ? top[0][1] : 1;
+    document.getElementById('top-empresas').innerHTML = top.map(([nome, count]) =>
+        `<div class="bar-row">
+            <span class="name" title="${nome}">${nome}</span>
+            <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(count/max*100)}%;"></div></div>
+            <span class="count">${count}</span>
+        </div>`
+    ).join('') || '<p class="text-muted small">—</p>';
+}
+
+function renderTudo() {
+    const dados = filtrarDados();
+    renderMetrics(dados);
+    const topEmp = topN(dados, 'empresa', 7);
+    renderBarChart('cv-empresas', topEmp.map(x=>x[0]), topEmp.map(x=>x[1]), '#E01F26');
+    const topResp = topN(dados, 'responsavel', 7);
+    renderBarChart('cv-resp', topResp.map(x=>x[0]), topResp.map(x=>x[1]), '#555');
+    renderEvolucao(dados);
+    renderHoras(dados);
+    renderTipo(dados);
+    renderTopEmpresas(dados);
+}
+
+carregarDados();
+</script>
+
+{% endblock %}

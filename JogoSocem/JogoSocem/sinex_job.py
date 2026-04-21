@@ -3,32 +3,27 @@
   sinex_job.py  —  Job Diário SINEX → jogo_socem
 =============================================================
 
-  Corre todos os dias via Task Scheduler.
-  Vai buscar os registos do dia anterior (dias úteis apenas).
-
   REGRAS DE PONTUAÇÃO:
   ┌─────────────────────────────────────────────────────────┐
   │  POR DIA (seg-sex, excluindo feriados):                 │
   │    < 7.2h               →  -1  (saiu cedo)             │
   │    >= 7.2h e <= 9.2h    →  +1  (cumpriu ✅)            │
   │    > 9.2h               →  -1  (logout esquecido)      │
+  │    Finish NULL           →  -1  (não fez logout)        │
   │    sem registo           →   0  (folga, neutro)         │
   │                                                         │
   │  BÓNUS SEMANAL (calculado às segundas):                 │
   │    5 dias úteis todos com +1  →  +1 extra              │
   └─────────────────────────────────────────────────────────┘
 
-  FLUXO POR DIA:
-    Seg → processa Sexta passada + bónus semana passada
-    Ter → processa Segunda
-    Qua → processa Terça
-    Qui → processa Quarta
-    Sex → processa Quinta
-    Sáb/Dom → não faz nada
-    Feriado  → não faz nada
+  CORREÇÕES aplicadas:
+  1. EmployeeID usado para identificar colaboradores
+     → dois nomes iguais em secções diferentes = pessoas distintas
+  2. Finish NULL → -1 automático (sem cálculo de horas)
+  3. Soma de horas arredondada a 2 casas antes de comparar
+     → evita erros de float (ex: 7.1999999 a ser tratado como 7.2)
 
   Anti-duplicação: tabela 'pontos' com tarefa='sinex_YYYY-MM-DD'
-  → se já existe registo, ignora sem duplicar.
 
   Instalar dependências:
       pip install pyodbc pandas holidays
@@ -39,7 +34,6 @@
 import pyodbc
 import pandas as pd
 import logging
-import logging.handlers
 from datetime import date, timedelta
 from typing import Optional
 
@@ -48,27 +42,17 @@ try:
     HAS_HOLIDAYS = True
 except ImportError:
     HAS_HOLIDAYS = False
-    print("AVISO: biblioteca 'holidays' não instalada. Usar: pip install holidays")
-    print("       A usar lista manual de feriados como fallback.")
+    print("AVISO: biblioteca 'holidays' nao instalada. Usar: pip install holidays")
 
 
 # ─────────────────────────────────────────────
-#  LOGGING (com rotação — mantém 30 dias)
+#  LOGGING (stdout — capturado pelo BAT via >>)
 # ─────────────────────────────────────────────
-
-_log_handler = logging.handlers.TimedRotatingFileHandler(
-    "sinex_job.log",
-    when="D",
-    interval=1,
-    backupCount=30,
-    encoding="utf-8"
-)
-_log_handler.setFormatter(logging.Formatter("%(asctime)s  %(levelname)s  %(message)s"))
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)s  %(message)s",
-    handlers=[_log_handler, logging.StreamHandler()]
+    handlers=[logging.StreamHandler()]
 )
 log = logging.getLogger(__name__)
 
@@ -113,39 +97,27 @@ _feriados_cache: dict = {}
 
 
 def get_feriados(ano: int) -> set:
-    """Devolve set de dates com feriados para o ano dado."""
     if ano in _feriados_cache:
         return _feriados_cache[ano]
 
     feriados = set()
-
     if HAS_HOLIDAYS:
         pt = holidays_lib.Portugal(years=ano)
         feriados.update(pt.keys())
     else:
-        # Feriados nacionais fixos (fallback sem biblioteca)
         feriados.update([
-            date(ano, 1, 1),    # Ano Novo
-            date(ano, 4, 25),   # Dia da Liberdade
-            date(ano, 5, 1),    # Dia do Trabalhador
-            date(ano, 6, 10),   # Dia de Portugal
-            date(ano, 8, 15),   # Assunção
-            date(ano, 10, 5),   # Implantação da República
-            date(ano, 11, 1),   # Todos os Santos
-            date(ano, 12, 1),   # Restauração da Independência
-            date(ano, 12, 8),   # Imaculada Conceição
-            date(ano, 12, 25),  # Natal
+            date(ano, 1, 1), date(ano, 4, 25), date(ano, 5, 1),
+            date(ano, 6, 10), date(ano, 8, 15), date(ano, 10, 5),
+            date(ano, 11, 1), date(ano, 12, 1), date(ano, 12, 8),
+            date(ano, 12, 25),
         ])
 
-    # Feriado municipal de Alcobaça (Martingança) — 20 de agosto
-    feriados.add(date(ano, 8, 20))
-
+    feriados.add(date(ano, 8, 20))  # Alcobaça municipal
     _feriados_cache[ano] = feriados
     return feriados
 
 
 def is_dia_util(d: date) -> bool:
-    """True se o dia for dia útil (seg-sex, não feriado)."""
     if d.weekday() >= 5:
         return False
     return d not in get_feriados(d.year)
@@ -153,17 +125,25 @@ def is_dia_util(d: date) -> bool:
 
 # ─────────────────────────────────────────────
 #  QUERY SINEX
+#  CORREÇÃO 1: inclui EmployeeID para identificar
+#              cada trabalhador de forma única.
+#  CORREÇÃO 2: Finish_Null = 1 quando Finish é NULL
+#              → Python dá -1 automático, sem usar GETDATE().
+#              Horas_Registo usa ISNULL(Finish, Start) = 0h
+#              para linhas sem logout (valor ignorado pelo Python).
 # ─────────────────────────────────────────────
 
 def get_query(data_inicio: str, data_fim: str) -> str:
     return f"""
     SELECT
-        e.WorkName                    AS Operador,
-        CAST(p.Start AS DATE)         AS Data,
-        ISNULL(c.Name, 'Sem Secção')  AS Seccao,
+        p.EmployeeID                                  AS EmployeeID,
+        e.WorkName                                    AS Operador,
+        CAST(p.Start AS DATE)                         AS Data,
+        ISNULL(c.Name, 'Sem Seccao')                  AS Seccao,
+        CASE WHEN p.Finish IS NULL THEN 1 ELSE 0 END  AS Finish_Null,
         CAST(
-            (DATEDIFF(ss, p.Start, ISNULL(p.Finish, GETDATE())) / 3600.0)
-        AS DECIMAL(10,2))             AS Horas_Registo
+            (DATEDIFF(ss, p.Start, ISNULL(p.Finish, p.Start)) / 3600.0)
+        AS DECIMAL(10,2))                             AS Horas_Registo
 
     FROM dbo.DATPRD_Production       AS p
     LEFT JOIN dbo.TABPRD_Unique      AS u ON u.UniqueID       = p.UniqueID
@@ -186,21 +166,33 @@ def get_query(data_inicio: str, data_fim: str) -> str:
 # ─────────────────────────────────────────────
 
 def pontuar_dia(horas: float) -> int:
+    """
+    CORREÇÃO 3: horas já vêm arredondadas a 2 casas decimais
+    antes desta função ser chamada, evitando erros de float
+    (ex: 7.1999999 seria tratado como >= 7.2).
+    """
     if horas < HORAS_MIN:
         return -1   # saiu cedo
     elif horas > HORAS_MAX:
         return -1   # logout esquecido
     else:
-        return 1    # cumpriu ✅
+        return 1    # cumpriu
 
 
-def calcular_pontos_diarios(df: pd.DataFrame, dia_alvo: date) -> tuple[dict, dict]:
+def calcular_pontos_diarios(df: pd.DataFrame, dia_alvo: date) -> tuple:
     """
     Devolve (pontos_dict, seccoes_dict) para o dia_alvo.
 
-    CORREÇÃO: agrupa horas por Operador (não por Operador+Seccao).
-    Se um operador trabalhou em 2 secções no mesmo dia, as horas somam-se
-    corretamente antes de pontuar. A secção é a mais frequente do dia.
+    pontos_dict  — chave: (EmployeeID, Operador)
+    seccoes_dict — chave: EmployeeID
+
+    CORREÇÃO 1: agrupa por (EmployeeID, Operador).
+      → Mesmo nome em departamentos diferentes = pessoas distintas.
+      → Mesmo EmployeeID em secções diferentes = mesma pessoa, horas somam-se.
+
+    CORREÇÃO 2: se qualquer sessão do dia tiver Finish NULL → -1 automático.
+
+    CORREÇÃO 3: soma arredondada a 2 casas antes de comparar com limiares.
     """
     if df.empty:
         return {}, {}
@@ -212,29 +204,51 @@ def calcular_pontos_diarios(df: pd.DataFrame, dia_alvo: date) -> tuple[dict, dic
     if df_dia.empty:
         return {}, {}
 
-    # Normalizar nomes (trim de espaços invisíveis)
     df_dia["Operador"] = df_dia["Operador"].str.strip()
     df_dia = df_dia[df_dia["Operador"] != ""]
+    df_dia["EmployeeID"] = df_dia["EmployeeID"].astype(int)
 
-    # Total de horas por operador no dia (soma de todos os postos/secções)
-    horas_por_op = (
-        df_dia.groupby("Operador")["Horas_Registo"]
+    # CORREÇÃO 2: detectar se alguma sessão tem Finish NULL por EmployeeID
+    null_por_emp = (
+        df_dia.groupby("EmployeeID")["Finish_Null"]
+        .max()
+        .to_dict()
+    )
+
+    # CORREÇÃO 1: soma de horas por (EmployeeID, Operador)
+    # → mesma pessoa em múltiplas secções soma corretamente
+    # → pessoas diferentes com mesmo nome ficam separadas
+    horas_por_emp = (
+        df_dia.groupby(["EmployeeID", "Operador"])["Horas_Registo"]
         .sum()
         .reset_index()
         .rename(columns={"Horas_Registo": "Horas_Dia"})
     )
 
-    # Secção mais frequente por operador no dia
+    # CORREÇÃO 3: arredondar a 2 casas para evitar erros de float
+    # ex: 3.77 + 1.17 + 2.25 em float64 pode dar 7.1999999
+    # com round(2) fica 7.19 → correto
+    horas_por_emp["Horas_Dia"] = horas_por_emp["Horas_Dia"].round(2)
+
+    # Secção mais frequente por EmployeeID (para associar ao departamento)
     seccoes = (
-        df_dia.groupby("Operador")["Seccao"]
+        df_dia.groupby("EmployeeID")["Seccao"]
         .agg(lambda x: x.value_counts().index[0])
         .to_dict()
     )
 
     pontos = {}
-    for _, row in horas_por_op.iterrows():
-        op = row["Operador"]
-        pontos[op] = pontuar_dia(float(row["Horas_Dia"]))
+    for _, row in horas_por_emp.iterrows():
+        emp_id   = int(row["EmployeeID"])
+        operador = str(row["Operador"])
+        key      = (emp_id, operador)
+
+        if null_por_emp.get(emp_id, 0):
+            # CORREÇÃO 2: Finish NULL → -1 (não se sabe quando saiu)
+            pontos[key] = -1
+            log.info(f"    -1  {operador}  [Finish NULL]")
+        else:
+            pontos[key] = pontuar_dia(float(row["Horas_Dia"]))
 
     return pontos, seccoes
 
@@ -244,11 +258,12 @@ def calcular_pontos_diarios(df: pd.DataFrame, dia_alvo: date) -> tuple[dict, dic
 # ─────────────────────────────────────────────
 
 _dept_cache: dict = {}
+_user_cache: dict = {}   # chave: sinex_employee_id (int) → user_id
 
 
 def garantir_dept(cursor, nome_seccao: str) -> int:
     """Garante que o departamento existe na BD. Usa cache em memória."""
-    nome_seccao = nome_seccao.strip() or "Sem Secção"
+    nome_seccao = nome_seccao.strip() or "Sem Seccao"
 
     if nome_seccao in _dept_cache:
         return _dept_cache[nome_seccao]
@@ -266,42 +281,69 @@ def garantir_dept(cursor, nome_seccao: str) -> int:
     )
     new_id = int(cursor.fetchone()[0])
     _dept_cache[nome_seccao] = new_id
-    log.info(f"  🏭  Dept criado: '{nome_seccao}' (ID {new_id})")
+    log.info(f"  Dept criado: '{nome_seccao}' (ID {new_id})")
     return new_id
 
 
-def garantir_utilizador(cursor, nome: str, dept_id: int) -> int:
-    """Garante que o utilizador existe na BD. Atualiza dept se mudou."""
+def garantir_utilizador(cursor, nome: str, dept_id: int, emp_id: int) -> int:
+    """
+    Garante que o utilizador existe na BD.
+
+    USA sinex_employee_id como chave primária de identificação.
+    → Dois "João Santos" em departamentos diferentes têm EmployeeIDs
+      diferentes no Sinex e ficam como utilizadores separados.
+
+    Lógica:
+    1. Procura por sinex_employee_id — caso normal (rápido)
+    2. Fallback de migração: procura por (nome, dept_id) sem employee_id
+       → atualiza sinex_employee_id no registo existente
+    3. Se não encontrar → cria novo utilizador
+    """
     nome = nome.strip()
+
+    if emp_id in _user_cache:
+        return _user_cache[emp_id]
+
+    # 1. Procura por sinex_employee_id (chave única por pessoa no Sinex)
     cursor.execute(
-        "SELECT id, departamento_id FROM users WHERE LOWER(nome) = LOWER(?)", (nome,)
+        "SELECT id FROM users WHERE sinex_employee_id = ?", (emp_id,)
     )
     row = cursor.fetchone()
-
     if row:
-        user_id    = int(row[0])
-        dept_atual = row[1]
-        if dept_atual is None or int(dept_atual) != dept_id:
-            cursor.execute(
-                "UPDATE users SET departamento_id = ? WHERE id = ?", (dept_id, user_id)
-            )
-        return user_id
+        _user_cache[emp_id] = int(row[0])
+        return _user_cache[emp_id]
 
+    # 2. Fallback migração: utilizadores existentes sem sinex_employee_id
+    #    (dados carregados antes desta correção)
     cursor.execute(
-        "INSERT INTO users (nome, departamento_id, pontos_total, ferias_ganhas) "
-        "OUTPUT INSERTED.id VALUES (?, ?, 0, 0)",
+        "SELECT id FROM users WHERE LOWER(nome) = LOWER(?) "
+        "AND departamento_id = ? AND sinex_employee_id IS NULL",
         (nome, dept_id)
     )
+    row = cursor.fetchone()
+    if row:
+        user_id = int(row[0])
+        cursor.execute(
+            "UPDATE users SET sinex_employee_id = ?, departamento_id = ? WHERE id = ?",
+            (emp_id, dept_id, user_id)
+        )
+        _user_cache[emp_id] = user_id
+        log.info(f"  sinex_employee_id atualizado: '{nome}' (empID {emp_id})")
+        return user_id
+
+    # 3. Criar novo utilizador
+    cursor.execute(
+        "INSERT INTO users (nome, departamento_id, sinex_employee_id, pontos_total, ferias_ganhas) "
+        "OUTPUT INSERTED.id VALUES (?, ?, ?, 0, 0)",
+        (nome, dept_id, emp_id)
+    )
     new_id = int(cursor.fetchone()[0])
-    log.info(f"  👤  Utilizador criado: '{nome}' → dept ID {dept_id}")
+    _user_cache[emp_id] = new_id
+    log.info(f"  Utilizador criado: '{nome}' (dept ID {dept_id}, empID {emp_id})")
     return new_id
 
 
 def ja_processado(cursor, user_id: int, tarefa: str) -> bool:
-    """
-    Verifica via tabela 'pontos' se esta tarefa já foi processada para este user.
-    Tarefa = 'sinex_YYYY-MM-DD' ou 'bonus_semana_YYYY-MM-DD_YYYY-MM-DD'
-    """
     cursor.execute(
         "SELECT COUNT(*) FROM pontos WHERE user_id = ? AND tarefa = ?",
         (user_id, tarefa)
@@ -313,7 +355,7 @@ def aplicar_ponto(cursor, conn, user_id: int, nome: str, pontos: int,
                   tarefa: str, data_ref: date) -> bool:
     """
     Insere na tabela pontos + eventos e atualiza users.pontos_total.
-    Devolve True se aplicado, False se já existia (duplicado).
+    Devolve True se aplicado, False se duplicado.
     """
     if ja_processado(cursor, user_id, tarefa):
         return False
@@ -334,6 +376,27 @@ def aplicar_ponto(cursor, conn, user_id: int, nome: str, pontos: int,
     return True
 
 
+def recalcular_pontos_total(conn):
+    """
+    Recalcula users.pontos_total a partir da soma real da tabela pontos.
+    Usa INNER JOIN para não tocar em utilizadores sem registos Sinex
+    (ex: utilizadores manuais com pontos atribuídos pelo admin).
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE u
+        SET u.pontos_total = p.soma
+        FROM users u
+        INNER JOIN (
+            SELECT user_id, SUM(pontos) AS soma
+            FROM pontos
+            GROUP BY user_id
+        ) p ON p.user_id = u.id
+    """)
+    conn.commit()
+    log.info("  pontos_total recalculado com sucesso.")
+
+
 # ─────────────────────────────────────────────
 #  PROCESSAR UM DIA
 # ─────────────────────────────────────────────
@@ -342,23 +405,23 @@ def processar_dia_na_bd(pontos_dict: dict, seccoes_dict: dict,
                         data_ref: date, conn) -> dict:
     """
     Aplica os pontos de um dia ao jogo_socem.
-    Cada operador é processado individualmente — um erro não para os outros.
 
-    Devolve resumo: {"aplicados": int, "ignorados": int, "erros": list}
+    pontos_dict  — chave: (EmployeeID, Operador) → pontos
+    seccoes_dict — chave: EmployeeID → nome da secção
     """
-    cursor = conn.cursor()
+    cursor    = conn.cursor()
     aplicados = 0
     ignorados = 0
     erros     = []
     tarefa    = f"sinex_{data_ref}"
 
-    for operador, pontos in pontos_dict.items():
+    for (emp_id, operador), pontos in pontos_dict.items():
         if pontos == 0:
             continue
         try:
-            seccao  = seccoes_dict.get(operador, "Sem Secção")
+            seccao  = seccoes_dict.get(emp_id, "Sem Seccao")
             dept_id = garantir_dept(cursor, seccao)
-            user_id = garantir_utilizador(cursor, operador, dept_id)
+            user_id = garantir_utilizador(cursor, operador, dept_id, emp_id)
             conn.commit()
 
             aplicado = aplicar_ponto(cursor, conn, user_id, operador,
@@ -368,7 +431,7 @@ def processar_dia_na_bd(pontos_dict: dict, seccoes_dict: dict,
                 log.info(f"    {sinal}{pontos}  {operador}  [{seccao}]")
                 aplicados += 1
             else:
-                log.info(f"  ⏭️   {operador} — já processado ({tarefa}), ignorado.")
+                log.info(f"  skip  {operador} — ja processado ({tarefa})")
                 ignorados += 1
 
         except Exception as e:
@@ -377,7 +440,7 @@ def processar_dia_na_bd(pontos_dict: dict, seccoes_dict: dict,
             except Exception:
                 pass
             msg = f"{operador}: {e}"
-            log.error(f"  ❌  Erro ao processar {msg}")
+            log.error(f"  ERRO ao processar {msg}")
             erros.append(msg)
 
     return {"aplicados": aplicados, "ignorados": ignorados, "erros": erros}
@@ -388,7 +451,6 @@ def processar_dia_na_bd(pontos_dict: dict, seccoes_dict: dict,
 # ─────────────────────────────────────────────
 
 def get_dias_uteis_semana(segunda: date, sexta: date) -> list:
-    """Devolve lista de dias úteis entre segunda e sexta (inclusive)."""
     dias = []
     d = segunda
     while d <= sexta:
@@ -400,28 +462,23 @@ def get_dias_uteis_semana(segunda: date, sexta: date) -> list:
 
 def processar_bonus_semanal(segunda: date, sexta: date, conn) -> dict:
     """
-    Verifica via tabela 'pontos' quem teve +1 em todos os dias úteis da semana
-    e atribui +1 de bónus.
-
-    Devolve {"aplicados": int, "ignorados": int}
+    Atribui +1 de bónus a quem teve +1 em todos os dias úteis da semana.
     """
     dias_uteis = get_dias_uteis_semana(segunda, sexta)
     tarefa_bonus = f"bonus_semana_{segunda}_{sexta}"
 
     if len(dias_uteis) < 5:
         log.info(
-            f"  ℹ️   Semana {segunda}→{sexta} tem {len(dias_uteis)} dias úteis "
-            f"(feriados?) — bónus não aplicado."
+            f"  Semana {segunda}->{sexta} tem {len(dias_uteis)} dias uteis "
+            f"(feriados?) — bonus nao aplicado."
         )
         return {"aplicados": 0, "ignorados": 0}
 
-    tarefas_dia = [f"sinex_{d}" for d in dias_uteis]
+    tarefas_dia  = [f"sinex_{d}" for d in dias_uteis]
     placeholders = ",".join(["?" for _ in tarefas_dia])
-    n_dias = len(tarefas_dia)
+    n_dias       = len(tarefas_dia)
 
     cursor = conn.cursor()
-
-    # Utilizadores com +1 em todos os dias úteis da semana
     cursor.execute(f"""
         SELECT p.user_id, u.nome, u.departamento_id
         FROM pontos p
@@ -433,29 +490,29 @@ def processar_bonus_semanal(segunda: date, sexta: date, conn) -> dict:
     """, (*tarefas_dia, n_dias))
 
     candidatos = cursor.fetchall()
-    aplicados = 0
-    ignorados = 0
+    aplicados  = 0
+    ignorados  = 0
 
     for row in candidatos:
-        user_id, nome, _ = int(row[0]), row[1], row[2]
+        user_id, nome = int(row[0]), row[1]
         try:
             aplicado = aplicar_ponto(cursor, conn, user_id, nome,
                                      1, tarefa_bonus, sexta)
             if aplicado:
-                log.info(f"  ⭐  Bónus semana completa +1 → {nome}")
+                log.info(f"  Bonus semana completa +1 -> {nome}")
                 aplicados += 1
             else:
-                log.info(f"  ⏭️   Bónus {nome} já aplicado — ignorado.")
+                log.info(f"  Bonus {nome} ja aplicado — ignorado.")
                 ignorados += 1
         except Exception as e:
             try:
                 conn.rollback()
             except Exception:
                 pass
-            log.error(f"  ❌  Erro bónus {nome}: {e}")
+            log.error(f"  ERRO bonus {nome}: {e}")
 
     if aplicados == 0 and ignorados == 0:
-        log.info("  ℹ️   Nenhum operador com semana completa.")
+        log.info("  Nenhum operador com semana completa.")
 
     return {"aplicados": aplicados, "ignorados": ignorados}
 
@@ -465,16 +522,10 @@ def processar_bonus_semanal(segunda: date, sexta: date, conn) -> dict:
 # ─────────────────────────────────────────────
 
 def get_semanas_completas(data_inicio: date, data_fim: date) -> list:
-    """
-    Devolve lista de (segunda, sexta) para cada semana Mon-Fri
-    completamente contida no intervalo [data_inicio, data_fim].
-    """
     semanas = []
-    # Primeira segunda-feira >= data_inicio
     d = data_inicio
     while d.weekday() != 0:
         d += timedelta(days=1)
-
     while True:
         segunda = d
         sexta   = d + timedelta(days=4)
@@ -482,7 +533,6 @@ def get_semanas_completas(data_inicio: date, data_fim: date) -> list:
             break
         semanas.append((segunda, sexta))
         d += timedelta(days=7)
-
     return semanas
 
 
@@ -492,33 +542,30 @@ def get_semanas_completas(data_inicio: date, data_fim: date) -> list:
 
 def processar_intervalo(data_inicio_str: str, data_fim_str: str) -> dict:
     """
-    Processa pontos Sinex para todos os dias úteis no intervalo [data_inicio, data_fim].
+    Processa pontos Sinex para todos os dias úteis no intervalo.
     Inclui bónus semanal para semanas completas dentro do intervalo.
-    Anti-duplicação via tabela 'pontos': dias já processados são ignorados.
-
-    Devolve dict com resumo do processamento (para a UI de reprocessamento).
+    Anti-duplicação via tabela 'pontos'.
     """
     try:
         data_inicio = date.fromisoformat(data_inicio_str)
         data_fim    = date.fromisoformat(data_fim_str)
     except ValueError as e:
-        return {"erro_fatal": f"Data inválida: {e}"}
+        return {"erro_fatal": f"Data invalida: {e}"}
 
     if data_inicio > data_fim:
-        return {"erro_fatal": "Data início é posterior à data fim."}
+        return {"erro_fatal": "Data inicio e posterior a data fim."}
 
     resultado = {
         "data_inicio": data_inicio_str,
         "data_fim":    data_fim_str,
-        "dias": [],
-        "bonus": [],
+        "dias":            [],
+        "bonus":           [],
         "total_aplicados": 0,
         "total_ignorados": 0,
-        "total_erros":    0,
-        "erro_fatal":     None,
+        "total_erros":     0,
+        "erro_fatal":      None,
     }
 
-    # Dias úteis no intervalo
     dias_uteis = []
     d = data_inicio
     while d <= data_fim:
@@ -527,47 +574,42 @@ def processar_intervalo(data_inicio_str: str, data_fim_str: str) -> dict:
         d += timedelta(days=1)
 
     if not dias_uteis:
-        resultado["erro_fatal"] = "Sem dias úteis no intervalo selecionado."
+        resultado["erro_fatal"] = "Sem dias uteis no intervalo selecionado."
         return resultado
 
     log.info("=" * 60)
-    log.info(f"  🔄  REPROCESSAMENTO {data_inicio} → {data_fim}  ({len(dias_uteis)} dias úteis)")
+    log.info(f"  REPROCESSAMENTO {data_inicio} -> {data_fim}  ({len(dias_uteis)} dias uteis)")
     log.info("=" * 60)
 
     # Ler Sinex para todo o intervalo de uma vez
-    data_fim_query = str(data_fim + timedelta(days=1))  # exclusive
+    data_fim_query = str(data_fim + timedelta(days=1))
     try:
         sinex_conn = pyodbc.connect(SINEX_CONN, timeout=30)
         df = pd.read_sql(get_query(data_inicio_str, data_fim_query), sinex_conn)
         sinex_conn.close()
-        log.info(f"  📥  {len(df):,} registos lidos do Sinex.")
+        log.info(f"  {len(df):,} registos lidos do Sinex.")
     except Exception as e:
-        log.error(f"  ❌  Erro a ler Sinex: {e}")
+        log.error(f"  ERRO a ler Sinex: {e}")
         resultado["erro_fatal"] = f"Erro ao ler Sinex: {e}"
         return resultado
 
-    # Ligar ao jogo_socem
     try:
         conn_jogo = pyodbc.connect(JOGO_CONN)
     except Exception as e:
-        log.error(f"  ❌  Erro a ligar jogo_socem: {e}")
+        log.error(f"  ERRO a ligar jogo_socem: {e}")
         resultado["erro_fatal"] = f"Erro ao ligar jogo_socem: {e}"
         return resultado
 
     try:
-        # Processar cada dia útil
         for dia in dias_uteis:
-            log.info(f"  📊  {dia} ...")
+            log.info(f"  {dia} ...")
             pontos_dia, seccoes = calcular_pontos_diarios(df, dia)
 
             if not pontos_dia:
-                log.info(f"  ℹ️   Sem registos Sinex para {dia}.")
+                log.info(f"  Sem registos Sinex para {dia}.")
                 resultado["dias"].append({
-                    "data":      str(dia),
-                    "aplicados": 0,
-                    "ignorados": 0,
-                    "erros":     0,
-                    "sem_dados": True,
+                    "data": str(dia), "aplicados": 0,
+                    "ignorados": 0, "erros": 0, "sem_dados": True,
                 })
                 continue
 
@@ -584,40 +626,20 @@ def processar_intervalo(data_inicio_str: str, data_fim_str: str) -> dict:
             resultado["total_erros"]     += len(resumo["erros"])
 
         # Bónus semanal para semanas completas dentro do intervalo
-        semanas = get_semanas_completas(data_inicio, data_fim)
-        for segunda, sexta in semanas:
-            log.info(f"  ⭐  Bónus semana {segunda} → {sexta} ...")
+        for segunda, sexta in get_semanas_completas(data_inicio, data_fim):
+            log.info(f"  Bonus semana {segunda} -> {sexta} ...")
             res_bonus = processar_bonus_semanal(segunda, sexta, conn_jogo)
             resultado["bonus"].append({
-                "semana":    f"{segunda} → {sexta}",
+                "semana":    f"{segunda} -> {sexta}",
                 "aplicados": res_bonus["aplicados"],
                 "ignorados": res_bonus["ignorados"],
             })
 
-        # ── RECALCULAR pontos_total a partir da tabela pontos ──────────
-        # Garante que users.pontos_total está sempre em sincronismo com a
-        # soma real da tabela pontos (evita desvios por triggers, double-updates, etc.)
-        log.info("  🔄  A recalcular pontos_total de todos os utilizadores...")
-        try:
-            cursor_fix = conn_jogo.cursor()
-            cursor_fix.execute("""
-                UPDATE u
-                SET u.pontos_total = ISNULL(p.soma, 0)
-                FROM users u
-                LEFT JOIN (
-                    SELECT user_id, SUM(pontos) AS soma
-                    FROM pontos
-                    GROUP BY user_id
-                ) p ON p.user_id = u.id
-            """)
-            conn_jogo.commit()
-            log.info("  ✅  pontos_total recalculado com sucesso.")
-        except Exception as e_fix:
-            log.error(f"  ⚠️   Erro ao recalcular pontos_total: {e_fix}")
-        # ───────────────────────────────────────────────────────────────
+        # Recalcular pontos_total (salvaguarda de consistência)
+        recalcular_pontos_total(conn_jogo)
 
     except Exception as e:
-        log.error(f"  ❌  Erro inesperado: {e}")
+        log.error(f"  ERRO inesperado: {e}")
         resultado["erro_fatal"] = str(e)
     finally:
         try:
@@ -626,7 +648,7 @@ def processar_intervalo(data_inicio_str: str, data_fim_str: str) -> dict:
             pass
 
     log.info(
-        f"  🏁  Concluído: {resultado['total_aplicados']} aplicados, "
+        f"  Concluido: {resultado['total_aplicados']} aplicados, "
         f"{resultado['total_ignorados']} ignorados, "
         f"{resultado['total_erros']} erros."
     )
@@ -649,17 +671,14 @@ def run_job():
     """
     hoje = date.today()
 
-    # Fim de semana
     if hoje.weekday() >= 5:
-        log.info("  ℹ️   Fim de semana — job ignorado.")
+        log.info("  Fim de semana — job ignorado.")
         return
 
-    # Feriado (hoje é feriado, o job não corre)
     if not is_dia_util(hoje):
-        log.info(f"  ℹ️   {hoje} é feriado — job ignorado.")
+        log.info(f"  {hoje} e feriado — job ignorado.")
         return
 
-    # Segunda-feira: processa sexta passada + bónus
     if hoje.weekday() == 0:
         dia_a_processar = hoje - timedelta(days=3)
         segunda_passada = hoje - timedelta(days=7)
@@ -670,45 +689,24 @@ def run_job():
         sexta_passada   = None
 
     log.info("=" * 60)
-    log.info(f"  🚀  JOB SINEX — a processar {dia_a_processar}")
+    log.info(f"  JOB SINEX — a processar {dia_a_processar}")
     log.info("=" * 60)
 
-    # Processar o dia
     processar_intervalo(str(dia_a_processar), str(dia_a_processar))
 
-    # Bónus semanal só às segundas
     if hoje.weekday() == 0 and segunda_passada and sexta_passada:
-        log.info(f"  ⭐  Segunda → bónus {segunda_passada} a {sexta_passada} ...")
+        log.info(f"  Segunda -> bonus {segunda_passada} a {sexta_passada} ...")
         try:
             conn_jogo = pyodbc.connect(JOGO_CONN)
             try:
                 processar_bonus_semanal(segunda_passada, sexta_passada, conn_jogo)
+                recalcular_pontos_total(conn_jogo)
             finally:
                 conn_jogo.close()
         except Exception as e:
-            log.error(f"  ❌  Erro no bónus semanal: {e}")
+            log.error(f"  ERRO no bonus semanal: {e}")
 
-    # Recalcular pontos_total (salvaguarda final)
-    try:
-        conn_jogo = pyodbc.connect(JOGO_CONN)
-        cursor_fix = conn_jogo.cursor()
-        cursor_fix.execute("""
-            UPDATE u
-            SET u.pontos_total = ISNULL(p.soma, 0)
-            FROM users u
-            LEFT JOIN (
-                SELECT user_id, SUM(pontos) AS soma
-                FROM pontos
-                GROUP BY user_id
-            ) p ON p.user_id = u.id
-        """)
-        conn_jogo.commit()
-        conn_jogo.close()
-        log.info("  🔄  pontos_total recalculado.")
-    except Exception as e:
-        log.error(f"  ⚠️   Erro ao recalcular pontos_total: {e}")
-
-    log.info("  🏁  Job concluído.\n")
+    log.info("  Job concluido.\n")
 
 
 # ─────────────────────────────────────────────
@@ -716,6 +714,6 @@ def run_job():
 # ─────────────────────────────────────────────
 
 if __name__ == "__main__":
-    log.info("▶️   A correr job...")
+    log.info("A correr job...")
     run_job()
-    log.info("✅  Job terminado.")
+    log.info("Job terminado.")
