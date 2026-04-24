@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <title>🛍️ Loja de Pontos — JogoScore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100">
+{% include '_sidebar.html' %}
+<div class="ws-content" style="padding:30px;">
+    <div class="max-w-5xl mx-auto">
+
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">🛍️ Loja de Pontos</h1>
+            <p class="text-gray-500 mt-1">
+                Qualquer colaborador (SINEX ou IDOntime) pode resgatar.
+                Para utilizadores em ambos os sistemas, o desconto é proporcional.
+            </p>
+        </div>
+
+        {% if msg %}
+        <div class="mb-6 px-6 py-4 rounded-xl font-semibold
+            {% if 'Erro' in msg or 'insuficientes' in msg %}
+            bg-red-100 text-red-700 border border-red-200
+            {% else %}
+            bg-green-100 text-green-700 border border-green-200
+            {% endif %}">
+            {{ msg | replace('+', ' ') }}
+        </div>
+        {% endif %}
+
+        {% if not recompensas %}
+        <div class="bg-white rounded-2xl shadow p-12 text-center">
+            <div class="text-6xl mb-4">🏪</div>
+            <h2 class="text-2xl font-bold text-gray-600 mb-2">Loja ainda vazia</h2>
+            <p class="text-gray-500">
+                O administrador ainda não criou recompensas.
+                <a href="/admin/loja" class="text-indigo-600 font-semibold hover:underline">Configurar loja →</a>
+            </p>
+        </div>
+        {% else %}
+
+        <!-- Seletor de colaborador (leaderboard unificado) -->
+        <div class="bg-white rounded-2xl shadow-xl border border-blue-100 p-6 mb-8">
+            <h2 class="text-lg font-bold text-gray-700 mb-3">Quem está a resgatar?</h2>
+            <select id="user_select" onchange="updateSaldo()"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-gray-800">
+                <option value="">-- Selecionar colaborador --</option>
+                {% for u in users %}
+                <option value="{{ loop.index }}"
+                        data-sinex-id="{{ u.id or '' }}"
+                        data-idon-id="{{ u.id_idonics or '' }}"
+                        data-pontos="{{ u.pontos_total }}">
+                    {{ u.nome }} ({{ u.departamento }}) — {{ u.pontos_total }} pts
+                    {% if u.pontos_sinex > 0 and u.pontos_idonics > 0 %}[SINEX+IDOntime]{% elif u.fonte == 'sinex' %}[SINEX]{% else %}[IDOntime]{% endif %}
+                </option>
+                {% endfor %}
+            </select>
+            <p class="mt-3 text-sm text-gray-500">Saldo: <span id="saldo_display" class="font-bold text-indigo-600 text-lg">—</span></p>
+        </div>
+
+        <!-- Catálogo -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for r in recompensas %}
+            <div class="bg-white rounded-2xl shadow-xl border border-blue-100 p-6 flex flex-col">
+                <div class="text-4xl mb-3 text-center">🎁</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2 text-center">{{ r.nome }}</h3>
+                {% if r.descricao %}
+                <p class="text-sm text-gray-500 mb-4 text-center flex-1">{{ r.descricao }}</p>
+                {% else %}
+                <div class="flex-1"></div>
+                {% endif %}
+                <div class="text-center mb-4">
+                    <span class="text-3xl font-black text-indigo-600">{{ r.custo_pontos }}</span>
+                    <span class="text-gray-500 text-sm"> pts</span>
+                </div>
+                <!-- O form tem campos hidden que são preenchidos pelo JS antes de submeter -->
+                <form method="POST" action="/loja/resgatar" id="form_{{ r.id }}">
+                    <input type="hidden" name="sinex_user_id"          id="sinex_{{ r.id }}" value="">
+                    <input type="hidden" name="idontime_colaborador_id" id="idon_{{ r.id }}"  value="">
+                    <input type="hidden" name="recompensa_id" value="{{ r.id }}">
+                    <button type="button"
+                            onclick="resgatar({{ r.id }}, {{ r.custo_pontos }}, '{{ r.nome }}')"
+                            class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all">
+                        Resgatar
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+function updateSaldo() {
+    const sel = document.getElementById('user_select');
+    const opt = sel.options[sel.selectedIndex];
+    const pts = opt && opt.value ? opt.dataset.pontos : null;
+    document.getElementById('saldo_display').textContent = pts !== null ? pts + ' pts' : '—';
+}
+
+function resgatar(recId, custo, nome) {
+    const sel = document.getElementById('user_select');
+    if (!sel.value) { alert('Seleciona um colaborador primeiro.'); return; }
+
+    const opt  = sel.options[sel.selectedIndex];
+    const pts  = parseInt(opt.dataset.pontos);
+    if (pts < custo) {
+        alert(`Pontos insuficientes!\nTens ${pts} pts e precisas de ${custo} pts.`);
+        return;
+    }
+
+    if (!confirm(`Confirmas o resgate de "${nome}" por ${custo} pts?`)) return;
+
+    // Preencher campos hidden com os IDs correctos
+    document.getElementById('sinex_' + recId).value = opt.dataset.sinexId || '';
+    document.getElementById('idon_'  + recId).value = opt.dataset.idonId  || '';
+    document.getElementById('form_'  + recId).submit();
+}
+</script>
+</body>
+</html>

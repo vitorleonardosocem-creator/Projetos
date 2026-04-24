@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block titulo %}Utilizadores — JogoIDOnics{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold"><i class="bi bi-people-fill text-primary"></i> Utilizadores</h4>
+    <form action="{{ url_for('sincronizar') }}" method="post">
+        <button class="btn btn-sm btn-outline-info"
+                onclick="return confirm('Sincronizar colaboradores do IDOnics?')">
+            <i class="bi bi-cloud-download"></i> Sincronizar IDOnics
+        </button>
+    </form>
+</div>
+
+<!-- Filtros -->
+<div class="card bg-white mb-3 border-0 shadow-sm">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small text-muted mb-1">Pesquisa (nome / número)</label>
+                <input type="text" name="pesquisa" class="form-control form-control-sm"
+                       placeholder="Ex: João Silva ou 1234"
+                       value="{{ pesquisa }}">
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small text-muted mb-1">Departamento</label>
+                <select name="departamento" class="form-select form-select-sm">
+                    <option value="">— Todos —</option>
+                    {% for d in departamentos %}
+                    <option value="{{ d.id }}"
+                        {% if id_dept_sel == d.id|string %}selected{% endif %}>
+                        {{ d.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                <a href="{{ url_for('utilizadores') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabela -->
+<div class="card bg-white border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="d-flex justify-content-between align-items-center px-3 pt-3 pb-2">
+            <small class="text-muted">{{ colaboradores|length }} colaboradores</small>
+        </div>
+        <table class="table tabela-jogo table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Nº</th>
+                    <th>Departamento</th>
+                    <th class="text-center">Pontos</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in colaboradores %}
+                <tr>
+                    <td class="fw-semibold">{{ c.nome_disp }}</td>
+                    <td><small class="text-muted">{{ c.numero }}</small></td>
+                    <td><small class="text-muted">{{ c.departamento }}</small></td>
+                    <td class="text-center">
+                        <span class="badge rounded-pill px-3
+                            {% if c.pontos > 0 %}badge-pontos-pos
+                            {% elif c.pontos < 0 %}badge-pontos-neg
+                            {% else %}badge-pontos-zero{% endif %}">
+                            {% if c.pontos > 0 %}+{% endif %}{{ c.pontos }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('utilizador_detalhe', id_colab=c.id) }}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-5">
+                        <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                        Sem colaboradores. Usa o botão <strong>Sincronizar IDOnics</strong> para importar.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A Minha Área — JogoScore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .card { background: white; border-radius: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .pts-positivo { color: #16a34a; }
+        .pts-negativo { color: #dc2626; }
+        .pts-neutro   { color: #6b7280; }
+    </style>
+</head>
+<body>
+{% include '_sidebar.html' %}
+<div class="ws-content" style="padding:2rem;">
+    <div class="max-w-4xl mx-auto mb-6">
+        <h1 class="text-2xl font-black text-white">🎮 Minha Área</h1>
+    </div>
+
+    {% if msg %}
+    <div class="max-w-4xl mx-auto mb-4 px-5 py-3 rounded-xl font-semibold text-sm
+        {% if 'Erro' in msg or 'insuficientes' in msg or 'nao' in msg %}
+        bg-red-100 text-red-700 border border-red-300
+        {% else %}
+        bg-green-100 text-green-800 border border-green-300
+        {% endif %}">
+        {{ msg | replace('+', ' ') }}
+    </div>
+    {% endif %}
+
+    {% if not colaborador %}
+    <div class="max-w-4xl mx-auto card p-10 text-center">
+        <div class="text-5xl mb-4">👋</div>
+        <h2 class="text-2xl font-bold text-gray-700 mb-2">Olá, {{ request.state.user.username }}!</h2>
+        <p class="text-gray-500">A tua conta não está associada a nenhum colaborador.<br>
+           Fala com o administrador.</p>
+        {% if request.state.user.tipo == 'admin' %}
+        <a href="/" class="inline-block mt-6 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">
+            Ir para Dashboard Admin →
+        </a>
+        {% endif %}
+    </div>
+
+    {% else %}
+
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- Perfil + pontos -->
+        <div class="card p-8">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <div class="text-7xl">👤</div>
+                <div class="flex-1 text-center md:text-left">
+                    <h2 class="text-3xl font-black text-gray-800">{{ colaborador.nome }}</h2>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-3 mt-2">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                            🏭 {{ colaborador.departamento }}
+                        </span>
+                        {% if colaborador.equipa and colaborador.equipa not in ['Sem Equipa', '—'] %}
+                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+                            👥 {{ colaborador.equipa }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Pontos e ranking -->
+                <div class="text-center">
+                    <div class="text-5xl font-black {% if colaborador.pontos_total >= 0 %}text-green-600{% else %}text-red-500{% endif %}">
+                        {{ colaborador.pontos_total }} pts
+                    </div>
+                    <div class="text-gray-500 text-sm mt-1">#{{ pos_geral }} de {{ total_users }}</div>
+                    {% if colaborador.ferias_ganhas and colaborador.ferias_ganhas > 0 %}
+                    <div class="mt-2 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-semibold">
+                        🏖️ {{ colaborador.ferias_ganhas }} férias ganhas
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalhe pontos se tiver ambos os sistemas -->
+        {% if colaborador.tem_ambos %}
+        <div class="card p-6">
+            <h3 class="text-lg font-bold text-gray-700 mb-4">📊 Detalhe por Sistema</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-blue-50 rounded-xl p-4 text-center">
+                    <div class="text-2xl mb-1">🔧</div>
+                    <div class="text-sm text-blue-600 font-semibold mb-1">SINEX</div>
+                    <div class="text-3xl font-black {% if colaborador.pontos_sinex >= 0 %}text-blue-600{% else %}text-red-500{% endif %}">
+                        {{ colaborador.pontos_sinex }} pts
+                    </div>
+                </div>
+                <div class="bg-green-50 rounded-xl p-4 text-center">
+                    <div class="text-2xl mb-1">🕐</div>
+                    <div class="text-sm text-green-600 font-semibold mb-1">IDOntime</div>
+                    <div class="text-3xl font-black {% if colaborador.pontos_idonics >= 0 %}text-green-600{% else %}text-red-500{% endif %}">
+                        {{ colaborador.pontos_idonics }} pts
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4 text-sm text-gray-500">
+                Total combinado: <strong class="text-indigo-600">{{ colaborador.pontos_total }} pts</strong>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Barra de progresso (férias — baseada em pontos SINEX) -->
+        {% if colaborador.ferias_ganhas is defined %}
+        {% set pts = colaborador.pontos_sinex if colaborador.tem_ambos else colaborador.pontos_total %}
+        {% if pts < 10 %}
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold text-gray-700">🎯 Progresso para próximas férias</span>
+                <span class="text-sm text-gray-500">{{ [pts, 0] | max }} / 10 pts</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-4">
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-500 h-4 rounded-full transition-all"
+                     style="width: {{ [[pts * 10, 0] | max, 100] | min }}%"></div>
+            </div>
+            <p class="text-sm text-gray-400 mt-2">Faltam {{ [10 - pts, 0] | max }} pontos SINEX para ganhar mais um dia de férias.</p>
+        </div>
+        {% else %}
+        <div class="card p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200">
+            <div class="text-center">
+                <div class="text-4xl mb-2">🏖️</div>
+                <p class="font-bold text-yellow-700 text-lg">Parabéns! Já atingiste os 10 pontos — vais ganhar férias extra!</p>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Últimos registos SINEX -->
+        {% if eventos_sinex %}
+        <div class="card overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">SINEX</span>
+                <h3 class="text-lg font-bold text-gray-700">📅 Últimos Registos SINEX</h3>
+            </div>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-left">
+                        <th class="px-6 py-3 font-medium">Data</th>
+                        <th class="px-6 py-3 font-medium">Descrição</th>
+                        <th class="px-6 py-3 font-medium text-right">Pontos</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for ev in eventos_sinex %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-3 text-gray-500">{{ ev.data_fmt }}</td>
+                        <td class="px-6 py-3 text-gray-700">
+                            {% if 'sinex_' in ev.tarefa %}📊 Registo SINEX {{ ev.tarefa | replace('sinex_', '') }}
+                            {% elif 'bonus_semana' in ev.tarefa %}⭐ Bónus semana completa
+                            {% elif 'loja:' in ev.tarefa %}🛍️ {{ ev.tarefa | replace('loja: ', '') }}
+                            {% else %}{{ ev.tarefa }}{% endif %}
+                        </td>
+                        <td class="px-6 py-3 text-right font-bold
+                            {% if ev.pontos > 0 %}pts-positivo{% elif ev.pontos < 0 %}pts-negativo{% else %}pts-neutro{% endif %}">
+                            {% if ev.pontos > 0 %}+{% endif %}{{ ev.pontos }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Últimos registos IDOntime -->
+        {% if eventos_idonics %}
+        <div class="card overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <span class="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">IDOntime</span>
+                <h3 class="text-lg font-bold text-gray-700">📅 Últimos Registos IDOntime</h3>
+            </div>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-left">
+                        <th class="px-6 py-3 font-medium">Data</th>
+                        <th class="px-6 py-3 font-medium">Descrição</th>
+                        <th class="px-6 py-3 font-medium text-right">Pontos</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for ev in eventos_idonics %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-3 text-gray-500">{{ ev.data_fmt }}</td>
+                        <td class="px-6 py-3 text-gray-700">
+                            {% if 'picagem_' in ev.tarefa %}🕐 Picagem {{ ev.tarefa | replace('picagem_', '') }}
+                            {% else %}{{ ev.tarefa }}{% endif %}
+                        </td>
+                        <td class="px-6 py-3 text-right font-bold
+                            {% if ev.pontos > 0 %}pts-positivo{% elif ev.pontos < 0 %}pts-negativo{% else %}pts-neutro{% endif %}">
+                            {% if ev.pontos > 0 %}+{% endif %}{{ ev.pontos }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Loja de Pontos -->
+        {% if recompensas %}
+        <div class="card overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-700">🛍️ Loja de Pontos</h3>
+                <span class="text-sm text-gray-500">Saldo: <strong class="text-indigo-600">{{ colaborador.pontos_total }} pts</strong></span>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for r in recompensas %}
+                <div class="border border-gray-200 rounded-2xl p-5 flex flex-col">
+                    <div class="text-3xl text-center mb-2">🎁</div>
+                    <h4 class="font-bold text-gray-800 text-center mb-1">{{ r.nome }}</h4>
+                    {% if r.descricao %}
+                    <p class="text-xs text-gray-500 text-center mb-3 flex-1">{{ r.descricao }}</p>
+                    {% else %}<div class="flex-1"></div>{% endif %}
+                    <div class="text-center mb-3">
+                        <span class="text-2xl font-black text-indigo-600">{{ r.custo_pontos }}</span>
+                        <span class="text-gray-400 text-sm"> pts</span>
+                    </div>
+                    {% if colaborador.pontos_total >= r.custo_pontos %}
+                    <form method="POST" action="/loja/resgatar">
+                        {% if request.state.user.sinex_user_id %}
+                        <input type="hidden" name="sinex_user_id" value="{{ request.state.user.sinex_user_id }}">
+                        {% endif %}
+                        {% if request.state.user.idontime_colaborador_id %}
+                        <input type="hidden" name="idontime_colaborador_id" value="{{ request.state.user.idontime_colaborador_id }}">
+                        {% endif %}
+                        <input type="hidden" name="recompensa_id" value="{{ r.id }}">
+                        <button type="button"
+                                onclick="if(confirm('Confirmas o resgate de {{ r.nome }} por {{ r.custo_pontos }} pts?')) this.closest('form').submit()"
+                                class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition text-sm">
+                            Resgatar
+                        </button>
+                    </form>
+                    {% else %}
+                    <button disabled class="w-full py-2 bg-gray-100 text-gray-400 font-semibold rounded-xl text-sm cursor-not-allowed">
+                        Pontos insuficientes
+                    </button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

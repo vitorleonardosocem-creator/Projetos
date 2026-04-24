@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>⭐ Atribuir Pontos - JogoScore</title>
+    <meta charset="utf-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #f0f4ff 0%, #e8eaf6 100%); min-height: 100vh; }
+
+        .page-header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 1.8rem 2rem; border-radius: 0 0 24px 24px; margin-bottom: 2rem; box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+        .page-header h1 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+        .page-header p  { color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+
+        /* Abas SINEX / IDOntime */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .tab-btn { padding: 0.65rem 1.8rem; border-radius: 12px; border: 2px solid transparent; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; background: white; color: #64748b; }
+        .tab-btn.active-sinex { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+        .tab-btn.active-idon  { background: #dcfce7; color: #15803d; border-color: #86efac; }
+        .tab-btn:not(.active-sinex):not(.active-idon):hover { background: #f1f5f9; }
+
+        .filter-bar { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 2rem; }
+        .filter-bar select { padding: 0.75rem 1.2rem; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; background: white; cursor: pointer; outline: none; transition: border-color 0.2s; min-width: 280px; }
+        .filter-bar select:focus { border-color: #818cf8; }
+
+        .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.2rem; }
+        .user-card { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.07); cursor: pointer; transition: all 0.25s; border: 2px solid transparent; text-align: center; }
+        .user-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); border-color: #818cf8; }
+        .user-avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 0.8rem; }
+        .avatar-sinex  { background: linear-gradient(135deg, #818cf8, #c084fc); }
+        .avatar-idon   { background: linear-gradient(135deg, #34d399, #059669); }
+        .user-nome { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin-bottom: 0.3rem; }
+        .user-dept { font-size: 0.8rem; color: #64748b; margin-bottom: 0.8rem; }
+        .user-pts { display: inline-block; padding: 0.3rem 1rem; border-radius: 20px; font-weight: 700; font-size: 1rem; }
+        .pts-pos  { background: #dcfce7; color: #166534; }
+        .pts-neg  { background: #fee2e2; color: #991b1b; }
+        .pts-zero { background: #f1f5f9; color: #475569; }
+
+        .empty-state { text-align: center; padding: 4rem 2rem; color: #94a3b8; }
+        .empty-state .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); z-index: 2000; backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 24px; width: 92%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.3); animation: slideUp 0.25s ease; }
+        @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+
+        .modal-header { padding: 1.5rem 1.8rem 1rem; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+        .modal-user-info { display: flex; align-items: center; gap: 1rem; }
+        .modal-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .modal-user-nome { font-size: 1.2rem; font-weight: 700; color: #1e293b; }
+        .modal-user-dept { font-size: 0.8rem; color: #64748b; }
+        .modal-pts-badge { padding: 0.4rem 1rem; border-radius: 20px; font-weight: 700; font-size: 1rem; white-space: nowrap; }
+        .close-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: #f1f5f9; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
+        .close-btn:hover { background: #e2e8f0; }
+
+        .modal-body { padding: 1.5rem 1.8rem; }
+        .motivo-label { font-size: 0.8rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+        .motivo-input { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; color: #1e293b; }
+        .motivo-input:focus { border-color: #818cf8; }
+
+        .reasons-section { margin-top: 1.2rem; }
+        .reasons-title { font-size: 0.78rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem; }
+        .chips-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.8rem; }
+        .chip { padding: 0.4rem 0.9rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: all 0.18s; white-space: nowrap; }
+        .chip-pos { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+        .chip-pos:hover, .chip-pos.active { background: #16a34a; color: white; border-color: #16a34a; }
+        .chip-neg { background: #fff1f2; color: #991b1b; border-color: #fecdd3; }
+        .chip-neg:hover, .chip-neg.active { background: #dc2626; color: white; border-color: #dc2626; }
+
+        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+        .btn-action { padding: 1rem; border-radius: 16px; border: 3px solid transparent; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .btn-neg-pt { background: #fff1f2; color: #dc2626; border-color: #fecdd3; }
+        .btn-neg-pt:hover, .btn-neg-pt.selected { background: #dc2626; color: white; border-color: #dc2626; transform: scale(1.03); box-shadow: 0 8px 20px rgba(220,38,38,0.3); }
+        .btn-pos-pt { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+        .btn-pos-pt:hover, .btn-pos-pt.selected { background: #16a34a; color: white; border-color: #16a34a; transform: scale(1.03); box-shadow: 0 8px 20px rgba(22,163,74,0.3); }
+        .btn-action .pts-label { font-size: 1.6rem; font-weight: 800; }
+        .btn-action .pts-desc  { font-size: 0.75rem; opacity: 0.8; }
+
+        .confirm-bar { display: none; margin-top: 1.2rem; padding: 1rem 1.5rem; border-radius: 16px; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+        .confirm-bar.show { display: flex; }
+        .confirm-bar.confirm-pos { background: #f0fdf4; border: 2px solid #bbf7d0; }
+        .confirm-bar.confirm-neg { background: #fff1f2; border: 2px solid #fecdd3; }
+        .confirm-text { font-weight: 600; font-size: 0.95rem; flex: 1; }
+        .confirm-text.pos { color: #166534; }
+        .confirm-text.neg { color: #991b1b; }
+        .btn-confirmar { padding: 0.7rem 1.8rem; border-radius: 12px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-confirmar-pos { background: #16a34a; color: white; }
+        .btn-confirmar-pos:hover { background: #15803d; }
+        .btn-confirmar-neg { background: #dc2626; color: white; }
+        .btn-confirmar-neg:hover { background: #b91c1c; }
+
+        .toast { display: none; position: fixed; bottom: 2rem; right: 2rem; padding: 1rem 1.5rem; border-radius: 16px; font-weight: 700; font-size: 0.95rem; z-index: 9999; box-shadow: 0 8px 30px rgba(0,0,0,0.2); animation: fadeIn 0.3s ease; }
+        .toast.ok  { background: #16a34a; color: white; }
+        .toast.err { background: #dc2626; color: white; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        /* Badge de sistema no modal */
+        .sistema-badge { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px; margin-left: 0.4rem; }
+        .badge-sinex { background: #dbeafe; color: #1d4ed8; }
+        .badge-idon  { background: #dcfce7; color: #15803d; }
+    </style>
+</head>
+<body>
+{% include '_sidebar.html' %}
+<div class="ws-content" style="padding: 0 2rem 2rem;">
+
+    <div class="page-header">
+        <h1>⭐ Atribuir Pontos Manuais</h1>
+        <p>Seleciona o sistema → departamento → colaborador → motivo → aplica pontos</p>
+    </div>
+
+    <!-- Selector SINEX / IDOntime -->
+    <div class="tabs">
+        <button class="tab-btn active-sinex" id="tab-sinex" onclick="mudarSistema('sinex')">
+            🔧 SINEX
+        </button>
+        <button class="tab-btn" id="tab-idon" onclick="mudarSistema('idontime')">
+            🕐 IDOntime
+        </button>
+    </div>
+
+    <!-- Filtro de departamento -->
+    <div class="filter-bar">
+        <select id="dept-select" onchange="carregarColaboradores()">
+            <option value="">👇 Seleciona um departamento…</option>
+            <!-- Populado por JS ao mudar de sistema -->
+        </select>
+        <span id="count-label" style="color:#64748b; font-size:0.9rem;"></span>
+    </div>
+
+    <!-- Grid de colaboradores -->
+    <div id="users-container">
+        <div class="empty-state">
+            <div class="icon">🏭</div>
+            <p>Seleciona um departamento para ver os colaboradores</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de atribuição -->
+<div id="modal-overlay" class="modal-overlay" onclick="fecharModalOverlay(event)">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-user-info">
+                <div class="modal-avatar" id="modal-avatar-div">👤</div>
+                <div>
+                    <div class="modal-user-nome" id="modal-nome">—</div>
+                    <div class="modal-user-dept" id="modal-dept">—</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.8rem;">
+                <span class="modal-pts-badge pts-zero" id="modal-pts-badge">0 pts</span>
+                <button class="close-btn" onclick="fecharModal()">✕</button>
+            </div>
+        </div>
+
+        <div class="modal-body">
+            <div class="motivo-label">Motivo</div>
+            <input type="text" class="motivo-input" id="motivo-input"
+                   placeholder="Escreve ou seleciona um motivo abaixo…"
+                   oninput="atualizarConfirmacao()">
+
+            <div class="reasons-section">
+                <div class="reasons-title"><span style="color:#16a34a">✅</span> Razões positivas (+1 pt)</div>
+                <div class="chips-row">
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">📅 Assiduidade especial</span>
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">🧹 5S Exemplar</span>
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">💡 Sugestão aceite</span>
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">📚 Formação concluída</span>
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">🔧 NC resolvida no prazo</span>
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">🤝 Apoio a colega</span>
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">🎯 Zero defeitos no mês</span>
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">🏆 Desempenho excecional</span>
+                    <span class="chip chip-pos" onclick="selecionarChip(this,+1)">⭐ Outro mérito</span>
+                </div>
+            </div>
+
+            <div class="reasons-section">
+                <div class="reasons-title"><span style="color:#dc2626">❌</span> Razões negativas (−1 pt)</div>
+                <div class="chips-row">
+                    <span class="chip chip-neg" onclick="selecionarChip(this,-1)">📅 Falta injustificada</span>
+                    <span class="chip chip-neg" onclick="selecionarChip(this,-1)">⚠️ NC fora do prazo</span>
+                    <span class="chip chip-neg" onclick="selecionarChip(this,-1)">🚫 Incumprimento 5S</span>
+                    <span class="chip chip-neg" onclick="selecionarChip(this,-1)">📋 Incumprimento de norma</span>
+                    <span class="chip chip-neg" onclick="selecionarChip(this,-1)">🔕 Falta de comunicação</span>
+                    <span class="chip chip-neg" onclick="selecionarChip(this,-1)">❗ Outro incumprimento</span>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button class="btn-action btn-neg-pt" id="btn-neg" onclick="selecionarPontos(-1)">
+                    <span class="pts-label">− 1</span>
+                    <span class="pts-desc">ponto negativo</span>
+                </button>
+                <button class="btn-action btn-pos-pt" id="btn-pos" onclick="selecionarPontos(+1)">
+                    <span class="pts-label">+ 1</span>
+                    <span class="pts-desc">ponto positivo</span>
+                </button>
+            </div>
+
+            <div class="confirm-bar" id="confirm-bar">
+                <div class="confirm-text" id="confirm-text"></div>
+                <button class="btn-confirmar" id="btn-confirmar" onclick="aplicarPontos()">Aplicar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Dados dos departamentos injectados pelo servidor ──────────────────────────
+const DEPTS_SINEX = [
+    {% for d in departamentos %}
+    { id: {{ d.id }}, nome: {{ d.nome | tojson }} },
+    {% endfor %}
+];
+const DEPTS_IDON = [
+    {% for d in depts_idontime %}
+    { id: {{ d.id }}, nome: {{ d.nome | tojson }} },
+    {% endfor %}
+];
+
+// ── Estado ────────────────────────────────────────────────────────────────────
+let sistema      = 'sinex';   // 'sinex' ou 'idontime'
+let currentUser  = null;
+let pontosSelecionados = 0;
+
+// ── Inicializar com departamentos SINEX ───────────────────────────────────────
+populaDepts(DEPTS_SINEX);
+
+function mudarSistema(s) {
+    sistema = s;
+    document.getElementById('tab-sinex').className = 'tab-btn' + (s === 'sinex' ? ' active-sinex' : '');
+    document.getElementById('tab-idon').className  = 'tab-btn' + (s === 'idontime' ? ' active-idon' : '');
+    populaDepts(s === 'sinex' ? DEPTS_SINEX : DEPTS_IDON);
+    document.getElementById('users-container').innerHTML =
+        '<div class="empty-state"><div class="icon">🏭</div><p>Seleciona um departamento para ver os colaboradores</p></div>';
+    document.getElementById('count-label').textContent = '';
+}
+
+function populaDepts(depts) {
+    const sel = document.getElementById('dept-select');
+    sel.innerHTML = '<option value="">👇 Seleciona um departamento…</option>';
+    depts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = '🏢 ' + d.nome;
+        sel.appendChild(opt);
+    });
+}
+
+// ── Carregar colaboradores via AJAX ───────────────────────────────────────────
+async function carregarColaboradores() {
+    const deptId    = document.getElementById('dept-select').value;
+    const container = document.getElementById('users-container');
+    const label     = document.getElementById('count-label');
+
+    if (!deptId) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">🏭</div><p>Seleciona um departamento para ver os colaboradores</p></div>';
+        label.textContent = '';
+        return;
+    }
+
+    container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><p>A carregar…</p></div>';
+
+    // Endpoint diferente consoante o sistema
+    const endpoint = sistema === 'sinex' ? '/dept-colaboradores' : '/dept-colaboradores-idontime';
+
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ dept_id: deptId })
+        });
+        const data  = await res.json();
+        const users = data.users || [];
+        label.textContent = users.length + ' colaboradores';
+
+        if (!users.length) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">🤷</div><p>Nenhum colaborador neste departamento</p></div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        const grid = document.createElement('div');
+        grid.className = 'users-grid';
+
+        users.forEach(u => {
+            const pts      = Number(u.pontos_total) || 0;
+            const ptsClass = pts > 0 ? 'pts-pos' : pts < 0 ? 'pts-neg' : 'pts-zero';
+            const ptsSign  = pts > 0 ? '+' : '';
+            const avatarCls = sistema === 'sinex' ? 'avatar-sinex' : 'avatar-idon';
+            const card = document.createElement('div');
+            card.className = 'user-card';
+            card.onclick = () => abrirModal(u);
+            card.innerHTML = `
+                <div class="user-avatar ${avatarCls}">👤</div>
+                <div class="user-nome">${u.nome}</div>
+                <div class="user-dept">${sistema === 'sinex' ? '🔧 SINEX' : '🕐 IDOntime'}</div>
+                <span class="user-pts ${ptsClass}">${ptsSign}${pts} pts</span>
+            `;
+            grid.appendChild(card);
+        });
+
+        container.appendChild(grid);
+    } catch (err) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">❌</div><p>Erro: ${err.message}</p></div>`;
+    }
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function abrirModal(user) {
+    currentUser = user;
+    pontosSelecionados = 0;
+
+    const pts       = Number(user.pontos_total) || 0;
+    const sistBadge = sistema === 'sinex'
+        ? '<span class="sistema-badge badge-sinex">SINEX</span>'
+        : '<span class="sistema-badge badge-idon">IDOntime</span>';
+
+    document.getElementById('modal-nome').innerHTML = user.nome + sistBadge;
+    document.getElementById('modal-dept').textContent = sistema === 'sinex' ? '🔧 SINEX' : '🕐 IDOntime';
+
+    const avatarDiv = document.getElementById('modal-avatar-div');
+    avatarDiv.className = 'modal-avatar ' + (sistema === 'sinex' ? 'avatar-sinex' : 'avatar-idon');
+
+    const badge = document.getElementById('modal-pts-badge');
+    badge.textContent = (pts >= 0 ? '+' : '') + pts + ' pts';
+    badge.className = 'modal-pts-badge ' + (pts > 0 ? 'pts-pos' : pts < 0 ? 'pts-neg' : 'pts-zero');
+
+    document.getElementById('motivo-input').value = '';
+    limparSelecoes();
+    esconderConfirmacao();
+
+    document.getElementById('modal-overlay').classList.add('open');
+    document.getElementById('motivo-input').focus();
+}
+
+function fecharModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    currentUser = null;
+    pontosSelecionados = 0;
+}
+function fecharModalOverlay(e) { if (e.target === document.getElementById('modal-overlay')) fecharModal(); }
+
+// ── Chips e pontos ────────────────────────────────────────────────────────────
+function selecionarChip(el, pts) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const texto = el.textContent.trim().replace(/^[^\w]+ ?/, '').trim();
+    document.getElementById('motivo-input').value = texto;
+    selecionarPontos(pts);
+}
+
+function selecionarPontos(pts) {
+    pontosSelecionados = pts;
+    document.getElementById('btn-pos').classList.toggle('selected', pts > 0);
+    document.getElementById('btn-neg').classList.toggle('selected', pts < 0);
+    atualizarConfirmacao();
+}
+
+function atualizarConfirmacao() {
+    if (!pontosSelecionados) return;
+    const motivo = document.getElementById('motivo-input').value.trim();
+    if (!motivo) { esconderConfirmacao(); return; }
+    mostrarConfirmacao(pontosSelecionados, motivo);
+}
+
+function mostrarConfirmacao(pts, motivo) {
+    const bar  = document.getElementById('confirm-bar');
+    const text = document.getElementById('confirm-text');
+    const btn  = document.getElementById('btn-confirmar');
+    const sinal = pts > 0 ? '+' : '';
+    const isPos = pts > 0;
+    bar.className  = 'confirm-bar show ' + (isPos ? 'confirm-pos' : 'confirm-neg');
+    text.className = 'confirm-text ' + (isPos ? 'pos' : 'neg');
+    text.innerHTML = `${isPos ? '✅' : '❌'} <strong>${sinal}${pts} pt</strong> — <em>${motivo}</em>`;
+    btn.className  = 'btn-confirmar ' + (isPos ? 'btn-confirmar-pos' : 'btn-confirmar-neg');
+    btn.textContent = isPos ? 'Aplicar +1' : 'Aplicar −1';
+}
+
+function esconderConfirmacao() { document.getElementById('confirm-bar').className = 'confirm-bar'; }
+function limparSelecoes() {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('btn-pos').classList.remove('selected');
+    document.getElementById('btn-neg').classList.remove('selected');
+}
+
+// ── Aplicar pontos via API ────────────────────────────────────────────────────
+async function aplicarPontos() {
+    const motivo = document.getElementById('motivo-input').value.trim();
+    if (!motivo)            return mostrarToast('Escreve o motivo antes de aplicar.', false);
+    if (!pontosSelecionados) return mostrarToast('Seleciona +1 ou −1.', false);
+    if (!currentUser)       return;
+
+    const btn = document.getElementById('btn-confirmar');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳';
+
+    // Endpoint diferente consoante o sistema
+    const apiUrl = sistema === 'sinex' ? '/api/atribuir-pontos' : '/api/atribuir-pontos-idontime';
+
+    try {
+        const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                user_id: currentUser.id,
+                pontos:  pontosSelecionados,
+                motivo:  motivo
+            })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.erro || 'Erro desconhecido');
+
+        const sinal = pontosSelecionados > 0 ? '+' : '';
+        mostrarToast(`✅ ${currentUser.nome}: ${sinal}${pontosSelecionados} pt · "${motivo}" · Total: ${data.pontos_total} pts`, true);
+        fecharModal();
+        carregarColaboradores();
+
+    } catch (err) {
+        mostrarToast('❌ Erro: ' + err.message, false);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+    }
+}
+
+function mostrarToast(msg, ok) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + (ok ? 'ok' : 'err');
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+</script>
+</body>
+</html>

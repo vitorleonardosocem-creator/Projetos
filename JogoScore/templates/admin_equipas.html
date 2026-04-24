@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🏭 Gestão Equipas - JogoScore</title>
+    <style>
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --glass: rgba(255,255,255,0.1);
+            --shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-section {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        input, select, button {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin: 0.5rem 0;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(102,126,234,0.4);
+            }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .msg {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+
+            .msg.success {
+                background: rgba(16,185,129,0.2);
+                color: white;
+                border: 1px solid var(--success);
+            }
+
+            .msg.error {
+                background: rgba(239,68,68,0.2);
+                color: white;
+                border: 1px solid var(--danger);
+            }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .item {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+{% include '_sidebar.html' %}
+<div class="ws-content" style="padding:2rem;">
+    <div class="container" style="max-width:100%;padding:0;">
+        <div class="header">
+            <h1>🏭 Gestão de Equipas</h1>
+            {% if request.query_params.msg %}
+            <div class="msg {{ 'success' if '✅' in request.query_params.msg else 'error' }}">{{ request.query_params.msg }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ equipas|length }}</div>
+                <div>Equipas Totais</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ users_sem|length }}</div>
+                <div>Users SEM Equipa</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ users_com|length }}</div>
+                <div>Users COM Equipa</div>
+            </div>
+        </div>
+
+        <!-- Forms Unificados -->
+        <div class="form-section">
+            <div class="form-grid">
+                <!-- 👥 CRIAR -->
+                <div>
+                    <h3>👥 Criar Nova Equipa</h3>
+                    <form method="POST">
+                        <input type="text" name="nome" placeholder="ex: Programação" required maxlength="50">
+                        <button type="submit" class="btn-primary">✅ Criar Equipa</button>
+                    </form>
+                </div>
+
+                <!-- 🔗 ASSOCIAR Existente -->
+                <div>
+                    <h3>🔗 Associar Existente</h3>
+                    <form method="POST">
+                        <select name="equipa_id" required>
+                            <option value="">Equipa Existente</option>
+                            {% for eq in equipas %}
+                            <option value="{{ eq.id }}">{{ eq.nome }} ({{ eq.users_count }} users)</option>
+                            {% endfor %}
+                        </select>
+                        <select name="user_id" required>
+                            <option value="">Qualquer User</option>
+                            {% for user in users_sem %}
+                            <option value="{{ user.id }}">{{ user.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn-primary">🔗 Associar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🗑️ DELETE + Lists -->
+        <div class="form-section">
+            <h3>🗑️ Gerir Equipas (com Users)</h3>
+            <div class="list" style="max-height: 350px;">
+                {% for eq in equipas %}
+                <div class="item">
+                    <span><strong>{{ eq.nome }}</strong> ({{ eq.users_count }} users)</span>
+                    <div>
+                        {% if eq.users_count == 0 %}
+                        <!-- Vazia: Delete direto -->
+                        <form method="POST" style="display:inline;" onsubmit="return confirm('Apagar {{ eq.nome }}?');">
+                            <input type="hidden" name="delete_id" value="{{ eq.id }}">
+                            <button type="submit" class="btn-danger">🗑️ Apagar</button>
+                        </form>
+                        {% else %}
+                        <!-- Com users: 2 opções -->
+                        <!-- 🧹 Esvaziar -->
+                        <form method="POST" style="display:inline;" onsubmit="return confirm('Esvaziar {{ eq.nome }}? {{ eq.users_count }} users ficam SEM equipa.');">
+                            <input type="hidden" name="esvaziar_id" value="{{ eq.id }}">
+                            <button type="submit" style="background:#f59e0b; color:white;">🧹 Esvaziar</button>
+                        </form>
+                        <!-- 🔄 Transferir -->
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="transfer_id" value="{{ eq.id }}">
+                            <select name="nova_equipa_id" style="width:auto; padding:0.5rem;">
+                                <option value="">→ Transferir para...</option>
+                                {% for other in equipas if other.id != eq.id %}
+                                <option value="{{ other.id }}">{{ other.nome }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn-danger">🔄 Mover</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <a href="/" style="color: white; text-decoration: none; font-size: 1.2rem; display: inline-block; margin-top: 2rem;">⬅ Dashboard</a>
+    </div>
+</div><!-- /ws-content -->
+</body>
+</html>

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block titulo %}Pontos — JogoIDOnics{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold"><i class="bi bi-star-fill text-warning"></i> Histórico de Pontos</h4>
+    <small class="text-muted">Máx. 200 registos</small>
+</div>
+
+<!-- Filtros -->
+<div class="card bg-white border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Data início</label>
+                <input type="date" name="data_ini" class="form-control form-control-sm"
+                       value="{{ data_ini }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Data fim</label>
+                <input type="date" name="data_fim" class="form-control form-control-sm"
+                       value="{{ data_fim }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Departamento</label>
+                <select name="departamento" class="form-select form-select-sm">
+                    <option value="">— Todos —</option>
+                    {% for d in departamentos %}
+                    <option value="{{ d.id }}"
+                        {% if id_dept_sel == d.id|string %}selected{% endif %}>
+                        {{ d.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                <a href="{{ url_for('pontos') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tabela de pontos -->
+<div class="card bg-white border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="px-3 pt-3 pb-2">
+            <small class="text-muted">{{ registos|length }} registos</small>
+        </div>
+        <table class="table tabela-jogo table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Colaborador</th>
+                    <th>Departamento</th>
+                    <th>Tarefa</th>
+                    <th>Observação</th>
+                    <th class="text-center">Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in registos %}
+                <tr>
+                    <td><small class="text-muted">
+                        {{ r.data.strftime('%d/%m/%Y') if r.data else '—' }}
+                    </small></td>
+                    <td>
+                        <a href="{{ url_for('utilizador_detalhe', id_colab=r.id_colab) }}"
+                           class="text-decoration-none fw-semibold text-dark">
+                            {{ r.colaborador }}
+                        </a>
+                    </td>
+                    <td><small class="text-muted">{{ r.departamento }}</small></td>
+                    <td><small>{{ r.tarefa }}</small></td>
+                    <td><small class="text-muted">{{ r.obs or '—' }}</small></td>
+                    <td class="text-center">
+                        <span class="badge rounded-pill px-3
+                            {% if r.pontos > 0 %}badge-pontos-pos
+                            {% elif r.pontos < 0 %}badge-pontos-neg
+                            {% else %}badge-pontos-zero{% endif %}">
+                            {% if r.pontos > 0 %}+{% endif %}{{ r.pontos }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-5">
+                        <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                        Sem registos. Ajusta os filtros ou reprocessa primeiro.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login — JogoScore SOCEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
+    <div class="w-full max-w-md mx-4">
+        <div class="text-center mb-8">
+            <div class="text-6xl mb-3">🏆</div>
+            <h1 class="text-4xl font-black text-white mb-1">JogoScore</h1>
+            <p class="text-indigo-300 text-sm">SOCEM — Sistema de Pontuação</p>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/10">
+            {% if erro %}
+            <div class="mb-5 px-4 py-3 bg-red-500/20 border border-red-400/40 rounded-xl text-red-200 text-sm font-medium">
+                ⚠️ {{ erro }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/login" class="space-y-5">
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <div>
+                    <label class="block text-sm font-semibold text-indigo-200 mb-2">Utilizador</label>
+                    <input type="text" name="username" required autofocus
+                           class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                           placeholder="nome de utilizador">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-indigo-200 mb-2">Password</label>
+                    <input type="password" name="password" required
+                           class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                           placeholder="••••••••">
+                </div>
+
+                <button type="submit"
+                        class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg text-lg">
+                    Entrar →
+                </button>
+            </form>
+        </div>
+
+        <p class="text-center text-white/30 text-xs mt-6">JogoScore SOCEM © 2026</p>
+    </div>
+</body>
+</html>

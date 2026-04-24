@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>👥 {{ nome_dept }} - JogoScore</title>
+    <meta charset="utf-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    {% include '_sidebar.html' %}
+
+    <div class="ws-content" style="padding: 2rem;">
+        <div class="max-w-4xl mx-auto">
+
+            <h1 class="text-3xl font-black text-white mb-6 text-center"
+                style="text-shadow: 0 4px 10px rgba(0,0,0,0.3)">
+                🏢 {{ nome_dept }}
+            </h1>
+
+            <!-- Stats do departamento -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="rounded-2xl p-5 text-center border border-white/20"
+                     style="background:rgba(255,255,255,0.12); backdrop-filter:blur(20px)">
+                    <div class="text-4xl font-black text-white">{{ total_users }}</div>
+                    <div class="text-white/80 text-sm mt-1">Colaboradores</div>
+                </div>
+                <div class="rounded-2xl p-5 text-center border border-white/20"
+                     style="background:rgba(255,255,255,0.12); backdrop-filter:blur(20px)">
+                    <div class="text-4xl font-black text-white">{{ total_pontos|round(0)|int }}</div>
+                    <div class="text-white/80 text-sm mt-1">Pontos Totais</div>
+                </div>
+                <div class="rounded-2xl p-5 text-center border border-white/20"
+                     style="background:rgba(255,255,255,0.12); backdrop-filter:blur(20px)">
+                    <div class="text-4xl font-black text-white">{{ "%.1f"|format(media_pontos) }}</div>
+                    <div class="text-white/80 text-sm mt-1">Média / Colaborador</div>
+                </div>
+            </div>
+
+            <!-- Tabela colaboradores -->
+            {% if users_dept %}
+            <div class="rounded-2xl overflow-hidden border border-white/20"
+                 style="background:rgba(255,255,255,0.12); backdrop-filter:blur(20px)">
+                <table class="w-full">
+                    <thead>
+                        <tr style="background:rgba(0,0,0,0.25)">
+                            <th class="px-5 py-3 text-left text-white font-semibold">#</th>
+                            <th class="px-5 py-3 text-left text-white font-semibold">👤 Colaborador</th>
+                            <th class="px-5 py-3 text-left text-white font-semibold">Sistema</th>
+                            <th class="px-5 py-3 text-center text-white font-semibold">⭐ Pontos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users_dept %}
+                        <tr style="border-top: 1px solid rgba(255,255,255,0.08);"
+                            onmouseover="this.style.background='rgba(255,255,255,0.12)'"
+                            onmouseout="this.style.background='transparent'">
+                            <td class="px-5 py-3 text-white/70 font-bold">{{ loop.index }}</td>
+                            <td class="px-5 py-3">
+                                {% if user.id %}
+                                <a href="/colaborador/{{ user.id }}"
+                                   class="text-indigo-200 hover:text-white font-semibold transition">
+                                    {{ user.nome }}
+                                </a>
+                                {% else %}
+                                <span class="text-white font-semibold">{{ user.nome }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-5 py-3">
+                                {% if user.pontos_sinex > 0 and user.pontos_idonics > 0 %}
+                                <span class="px-2 py-1 rounded-full text-xs font-bold"
+                                      style="background:#fdf4ff; color:#7e22ce">SINEX+IDOntime</span>
+                                {% elif user.fonte == 'sinex' %}
+                                <span class="px-2 py-1 rounded-full text-xs font-bold"
+                                      style="background:#dbeafe; color:#1d4ed8">SINEX</span>
+                                {% else %}
+                                <span class="px-2 py-1 rounded-full text-xs font-bold"
+                                      style="background:#dcfce7; color:#15803d">IDOntime</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-5 py-3 text-center font-black text-xl
+                                {% if user.pontos_total >= 0 %}text-green-300{% else %}text-red-300{% endif %}">
+                                {{ user.pontos_total }}
+                                {% if user.pontos_sinex > 0 and user.pontos_idonics > 0 %}
+                                <div class="text-xs font-normal text-white/50 mt-0.5">
+                                    {{ user.pontos_sinex }}S + {{ user.pontos_idonics }}I
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-white text-lg py-12 rounded-2xl border border-white/20"
+                 style="background:rgba(255,255,255,0.1)">
+                🤷 Ainda sem colaboradores neste departamento.
+            </div>
+            {% endif %}
+
+            <div class="mt-5">
+                <a href="/departamentos"
+                   class="text-white/70 hover:text-white text-sm transition">
+                    ⬅ Todos os Departamentos
+                </a>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

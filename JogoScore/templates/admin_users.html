@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>👤 Gestão Utilizadores - JogoScore</title>
+    <style>
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success: #10b981;
+            --danger: #ef4444;
+            --glass: rgba(255,255,255,0.1);
+            --shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            padding: 2rem 0;
+        }
+
+            .sidebar h2 {
+                text-align: center;
+                color: #333;
+                margin: 0 0 2rem;
+            }
+
+        .menu-item {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            margin-bottom: 0.5rem;
+        }
+
+            .menu-item:hover {
+                background: var(--glass);
+                border-left-color: #667eea;
+                transform: translateX(10px);
+            }
+
+        .main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .create-form {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            color: white;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.9);
+        }
+
+        .btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+            .btn:hover {
+                background: #059669;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(16,185,129,0.4);
+            }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .user-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-dept {
+            color: #10b981;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .back {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            display: inline-block;
+            margin-top: 2rem;
+        }
+
+        .alert {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .alert-success {
+            background: rgba(16,185,129,0.2);
+            color: white;
+            border: 1px solid #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+{% include '_sidebar.html' %}
+<div class="ws-content" style="padding:2rem;">
+        <div class="main" style="max-width:100%;padding:0;">
+            <h1>👤 Gestão Utilizadores</h1>
+
+            {% if request.query_params.msg %}
+            <div class="alert alert-success">{{ request.query_params.msg }}</div>
+            {% endif %}
+
+            <!-- Form Criar User -->
+            <div class="create-form">
+                <h3 style="color: white; margin-bottom: 1.5rem;">➕ Criar Novo Utilizador</h3>
+                <form method="POST" action="/admin-users">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo:</label>
+                            <input type="text" name="nome" required placeholder="Ex: João Silva">
+                        </div>
+                        <div class="form-group">
+                            <label>Departamento:</label>
+                            <select name="departamento_id" required>
+                                <option value="">Selecione...</option>
+                                {% for dept in departamentos %}
+                                <option value="{{ dept.id }}">{{ dept.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">✅ Criar Utilizador</button>
+                </form>
+            </div>
+
+            <!-- Cabeçalho + Filtro -->
+            <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1.2rem;">
+                <h3 style="color:white; margin:0;">
+                    📋 Utilizadores Existentes
+                    (<span id="count-vis">{{ total_users }}</span> / {{ total_users }})
+                </h3>
+                <input type="text" id="filtro-users"
+                       placeholder="🔍 Pesquisar por nome ou departamento..."
+                       oninput="filtrarUsers()"
+                       style="padding:0.6rem 1.1rem; border-radius:20px; border:none;
+                              font-size:0.95rem; flex:1; min-width:220px; max-width:380px;
+                              background:rgba(255,255,255,0.18); color:white; outline:none;
+                              box-shadow:0 4px 15px rgba(0,0,0,0.2);"
+                       onfocus="this.style.background='rgba(255,255,255,0.28)'"
+                       onblur="this.style.background='rgba(255,255,255,0.18)'">
+            </div>
+
+            <div class="users-grid" id="users-grid">
+                {% for user in users %}
+                <a href="/colaborador/{{ user.id }}"
+                   class="user-card user-item"
+                   data-nome="{{ user.nome | lower }}"
+                   data-dept="{{ (user.departamento_nome or '') | lower }}"
+                   style="text-decoration:none; display:block; cursor:pointer;
+                          transition: transform 0.25s, box-shadow 0.25s;"
+                   onmouseover="this.style.transform='translateY(-6px)';this.style.boxShadow='0 16px 40px rgba(0,0,0,0.35)'"
+                   onmouseout="this.style.transform='';this.style.boxShadow=''">
+                    <div class="user-name">{{ user.nome }}</div>
+                    <div class="user-dept">
+                        🏢 {{ user.departamento_nome or 'Sem departamento' }}
+                        {% if user.equipa_nome and user.equipa_nome != 'Sem equipa' %}
+                        · 👥 {{ user.equipa_nome }}
+                        {% endif %}
+                    </div>
+                    <div style="margin-top:0.6rem; font-size:1.3rem; font-weight:bold;
+                                color:{% if user.pontos_total >= 0 %}#86efac{% else %}#fca5a5{% endif %}">
+                        {{ '%+g' % user.pontos_total }} pts
+                    </div>
+                    <div style="margin-top:0.7rem; font-size:0.8rem; color:rgba(255,255,255,0.5);">
+                        👆 Ver histórico →
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+
+            <a href="/" class="back">⬅ Dashboard</a>
+
+<script>
+function filtrarUsers() {
+    const termo = document.getElementById('filtro-users').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.user-item');
+    let vis = 0;
+    items.forEach(el => {
+        const nome = el.dataset.nome || '';
+        const dept = el.dataset.dept || '';
+        const mostra = !termo || nome.includes(termo) || dept.includes(termo);
+        el.style.display = mostra ? '' : 'none';
+        if (mostra) vis++;
+    });
+    document.getElementById('count-vis').textContent = vis;
+}
+</script>
+        </div>
+</div><!-- /ws-content -->
+</body>
+</html>

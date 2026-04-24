@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reprocessar SINEX — JogoScore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+{% include '_sidebar.html' %}
+<div class="ws-content p-6">
+    <div class="max-w-3xl mx-auto">
+
+        <div class="flex items-center gap-3 mb-6">
+            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg font-bold text-sm">SINEX</span>
+            <h1 class="text-2xl font-black text-gray-800">🔄 Reprocessar SINEX</h1>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow p-6 mb-6">
+            <p class="text-sm text-gray-500 mb-5">
+                Recalcula os pontos SINEX para o intervalo de datas selecionado.
+                Pontos já existentes são ignorados (anti-duplicação por <code>sinex_YYYY-MM-DD</code>).
+            </p>
+
+            <form method="POST" action="/admin/reprocessar/sinex" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600 mb-1">Data Início</label>
+                        <input type="date" name="data_inicio" required
+                               value="{{ data_inicio or '' }}"
+                               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-600 mb-1">Data Fim</label>
+                        <input type="date" name="data_fim" required
+                               value="{{ data_fim or '' }}"
+                               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400">
+                    </div>
+                </div>
+                <button type="submit"
+                        class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition">
+                    🔄 Reprocessar SINEX
+                </button>
+            </form>
+        </div>
+
+        {% if resultado %}
+        <div class="bg-white rounded-2xl shadow p-6">
+            {% if resultado.erro_fatal %}
+            <div class="px-4 py-3 bg-red-100 text-red-700 rounded-xl mb-4 font-semibold">
+                ❌ {{ resultado.erro_fatal }}
+            </div>
+            {% else %}
+            <h2 class="text-lg font-bold text-gray-700 mb-4">✅ Resultado</h2>
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-green-50 rounded-xl p-4 text-center">
+                    <div class="text-2xl font-black text-green-600">{{ resultado.total_aplicados }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Aplicados</div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <div class="text-2xl font-black text-gray-500">{{ resultado.total_ignorados }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Ignorados</div>
+                </div>
+                <div class="bg-red-50 rounded-xl p-4 text-center">
+                    <div class="text-2xl font-black text-red-500">{{ resultado.total_erros }}</div>
+                    <div class="text-xs text-gray-500 mt-1">Erros</div>
+                </div>
+            </div>
+
+            {% if resultado.dias %}
+            <h3 class="font-semibold text-gray-600 mb-2 text-sm">Detalhe por dia:</h3>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500">
+                        <th class="px-4 py-2 text-left font-medium">Data</th>
+                        <th class="px-4 py-2 text-right font-medium">Aplicados</th>
+                        <th class="px-4 py-2 text-right font-medium">Ignorados</th>
+                        <th class="px-4 py-2 text-right font-medium">Erros</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for dia in resultado.dias %}
+                    <tr class="{% if dia.sem_dados %}text-gray-300{% endif %}">
+                        <td class="px-4 py-2">{{ dia.data }}</td>
+                        <td class="px-4 py-2 text-right text-green-600 font-semibold">{{ dia.aplicados }}</td>
+                        <td class="px-4 py-2 text-right text-gray-400">{{ dia.ignorados }}</td>
+                        <td class="px-4 py-2 text-right text-red-400">{{ dia.erros }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if resultado.bonus %}
+            <h3 class="font-semibold text-gray-600 mt-4 mb-2 text-sm">Bónus semanais:</h3>
+            {% for b in resultado.bonus %}
+            <div class="text-sm text-gray-500">⭐ {{ b.semana }} — {{ b.aplicados }} aplicados, {{ b.ignorados }} ignorados</div>
+            {% endfor %}
+            {% endif %}
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+</body>
+</html>

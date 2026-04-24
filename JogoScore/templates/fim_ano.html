@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔄 Reset Fim de Ano - JogoScore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .sidebar { position:fixed; left:0; top:0; height:100vh; width:250px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); z-index:1000; }
+        .menu-item { padding:15px; cursor:pointer; color:white; transition:background 0.3s; border-left:4px solid transparent; }
+        .menu-item:hover { background:rgba(255,255,255,0.2); border-left-color:#fff; }
+        .content { margin-left:250px; padding:30px; min-height:100vh; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-red-50 to-orange-100">
+<div class="sidebar">
+    <h2 class="text-2xl font-bold p-6 text-white text-center">🎮 JogoScore</h2>
+    <div class="menu-item" onclick="location.href='/'">🏠 Dashboard</div>
+    <div class="menu-item" onclick="location.href='/departamentos'">🏢 Departamentos</div>
+    <div class="menu-item" onclick="location.href='/loja'">🛍️ Loja de Pontos</div>
+    <div class="menu-item" onclick="location.href='/historico'">📜 Histórico Anual</div>
+    <div class="menu-item" onclick="location.href='/admin-pontos'">⭐ Atribuir Pontos</div>
+    <div class="menu-item" onclick="location.href='/admin/reprocessar'">🔄 Reprocessar Sinex</div>
+    <div class="menu-item" onclick="location.href='/admin/relatorio'">📊 Relatório Mensal</div>
+    <div class="menu-item" onclick="location.href='/admin/loja'">⚙️ Admin Loja</div>
+    <div class="menu-item" onclick="location.href='/tv'">📺 Ecrã TV</div>
+</div>
+<div class="content">
+<div class="max-w-2xl mx-auto pt-10">
+
+    <div class="bg-white rounded-2xl shadow-2xl border border-red-200 overflow-hidden">
+
+        <!-- Header vermelho de aviso -->
+        <div class="bg-gradient-to-r from-red-500 to-orange-500 px-8 py-6 text-white text-center">
+            <div class="text-5xl mb-3">⚠️</div>
+            <h1 class="text-2xl font-black">Reset de Fim de Ano {{ ano_atual }}</h1>
+            <p class="text-red-100 mt-1 text-sm">Esta ação não pode ser revertida</p>
+        </div>
+
+        <div class="p-8">
+
+            <!-- O que vai acontecer -->
+            <h2 class="text-lg font-bold text-gray-700 mb-4">O que vai acontecer:</h2>
+            <div class="space-y-3 mb-8">
+                <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <span class="text-2xl shrink-0">💾</span>
+                    <div>
+                        <p class="font-semibold text-gray-800">Guardar histórico</p>
+                        <p class="text-sm text-gray-500">Os pontos e férias atuais de todos os {{ total }} colaboradores são guardados em histórico para o ano {{ ano_atual }}.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
+                    <span class="text-2xl shrink-0">🏖️</span>
+                    <div>
+                        <p class="font-semibold text-gray-800">Atribuir férias</p>
+                        <p class="text-sm text-gray-500">
+                            <span class="font-bold text-green-700">{{ qualif }} colaborador{{ 's' if qualif != 1 }}</span>
+                            com ≥ 10 pontos ganham +1 dia de férias.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
+                    <span class="text-2xl shrink-0">🔄</span>
+                    <div>
+                        <p class="font-semibold text-gray-800">Reset de pontos</p>
+                        <p class="text-sm text-gray-500">Todos os <span class="font-bold text-red-600">{{ total }} colaboradores</span> ficam com 0 pontos para começar o novo ano.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo numérico -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-gray-50 rounded-xl p-4 text-center border">
+                    <div class="text-3xl font-black text-gray-700">{{ total }}</div>
+                    <div class="text-sm text-gray-500 mt-1">Total colaboradores</div>
+                </div>
+                <div class="bg-green-50 rounded-xl p-4 text-center border border-green-200">
+                    <div class="text-3xl font-black text-green-600">{{ qualif }}</div>
+                    <div class="text-sm text-green-600 mt-1">Ganham férias (≥ 10 pts)</div>
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex gap-4">
+                <a href="/historico"
+                   class="flex-1 text-center py-3 px-6 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-all">
+                    ← Cancelar
+                </a>
+                <form method="POST" action="/fim_ano" class="flex-1">
+                    <button type="submit"
+                            onclick="return confirm('Tens a certeza? Esta ação não pode ser revertida!')"
+                            class="w-full py-3 px-6 bg-red-600 text-white rounded-xl hover:bg-red-700 font-bold transition-all">
+                        ✅ Confirmar Reset {{ ano_atual }}
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+</div>
+</body>
+</html>

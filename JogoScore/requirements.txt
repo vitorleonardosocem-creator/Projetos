@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pyodbc
+pandas
+openpyxl
+bcrypt
+itsdangerous
+holidays
+python-pptx

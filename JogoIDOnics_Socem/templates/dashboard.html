@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard — JogoIDOnics{% endblock %}
+
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold"><i class="bi bi-speedometer2 text-primary"></i> Dashboard</h4>
+    <small class="text-muted">Actualizado em tempo real</small>
+</div>
+
+<!-- Cartões de estatísticas -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card p-3 bg-white">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon text-primary"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="fs-3 fw-bold">{{ total_colaboradores }}</div>
+                    <div class="text-muted small">Colaboradores activos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-3 bg-white">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon text-success"><i class="bi bi-arrow-up-circle-fill"></i></div>
+                <div>
+                    <div class="fs-3 fw-bold text-success">{{ com_pontos_positivos }}</div>
+                    <div class="text-muted small">Com saldo positivo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-3 bg-white">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon text-danger"><i class="bi bi-arrow-down-circle-fill"></i></div>
+                <div>
+                    <div class="fs-3 fw-bold text-danger">{{ com_pontos_negativos }}</div>
+                    <div class="text-muted small">Com saldo negativo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Leaderboard -->
+    <div class="col-lg-8">
+        <div class="card stat-card bg-white">
+            <div class="card-header bg-white border-bottom fw-bold py-3">
+                <i class="bi bi-trophy-fill text-warning"></i> Leaderboard — Top 15
+            </div>
+            <div class="card-body p-0">
+                <table class="table tabela-jogo mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px">#</th>
+                            <th>Nome</th>
+                            <th>Departamento</th>
+                            <th class="text-center">Pontos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in top15 %}
+                        <tr>
+                            <td class="
+                                {% if loop.index == 1 %}rank-1
+                                {% elif loop.index == 2 %}rank-2
+                                {% elif loop.index == 3 %}rank-3
+                                {% else %}text-muted{% endif %}
+                                fw-bold">
+                                {{ loop.index }}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('utilizador_detalhe', id_colab=c.id) }}"
+                                   class="text-decoration-none fw-semibold text-dark">
+                                    {{ c.nome }}
+                                </a>
+                            </td>
+                            <td><small class="text-muted">{{ c.departamento }}</small></td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill px-3 py-2
+                                    {% if c.pontos > 0 %}badge-pontos-pos
+                                    {% elif c.pontos < 0 %}badge-pontos-neg
+                                    {% else %}badge-pontos-zero{% endif %}">
+                                    {% if c.pontos > 0 %}+{% endif %}{{ c.pontos }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                Sem dados. Sincroniza e reprocessa primeiro.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Último processamento + Atalhos -->
+    <div class="col-lg-4">
+        <div class="card stat-card bg-white mb-3">
+            <div class="card-header bg-white border-bottom fw-bold py-3">
+                <i class="bi bi-clock-history text-secondary"></i> Último Processamento
+            </div>
+            <div class="card-body">
+                {% if ultimo_proc %}
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Período</td>
+                        <td class="fw-semibold">
+                            {{ ultimo_proc.data_ini.strftime('%d/%m/%Y') if ultimo_proc.data_ini else '—' }}
+                            →
+                            {{ ultimo_proc.data_fim.strftime('%d/%m/%Y') if ultimo_proc.data_fim else '—' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Registos</td>
+                        <td class="fw-semibold">{{ ultimo_proc.total }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Executado</td>
+                        <td class="fw-semibold">
+                            {{ ultimo_proc.executado_em.strftime('%d/%m/%Y %H:%M') if ultimo_proc.executado_em else '—' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Detalhe</td>
+                        <td><small class="text-muted">{{ ultimo_proc.obs or '—' }}</small></td>
+                    </tr>
+                </table>
+                {% else %}
+                <p class="text-muted text-center py-3 mb-0">
+                    <i class="bi bi-info-circle"></i> Ainda sem processamentos.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Atalhos rápidos -->
+        <div class="card stat-card bg-white">
+            <div class="card-header bg-white border-bottom fw-bold py-3">
+                <i class="bi bi-lightning-fill text-warning"></i> Atalhos Rápidos
+            </div>
+            <div class="card-body d-grid gap-2">
+                <a href="{{ url_for('reprocessar_view') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-repeat"></i> Reprocessar Picagens
+                </a>
+                <a href="{{ url_for('utilizadores') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-people"></i> Ver Colaboradores
+                </a>
+                <a href="{{ url_for('relatorio') }}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-bar-chart"></i> Ver Relatório
+                </a>
+                <form action="{{ url_for('sincronizar') }}" method="post">
+                    <button type="submit" class="btn btn-outline-info btn-sm w-100"
+                            onclick="return confirm('Sincronizar colaboradores do IDOnics?')">
+                        <i class="bi bi-cloud-download"></i> Sincronizar IDOnics
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

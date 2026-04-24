@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block titulo %}{{ colaborador.nome_disp }} — JogoIDOnics{% endblock %}
+
+{% block conteudo %}
+<div class="mb-4">
+    <a href="{{ url_for('utilizadores') }}" class="text-decoration-none text-muted small">
+        <i class="bi bi-arrow-left"></i> Voltar a Utilizadores
+    </a>
+</div>
+
+<!-- Cabeçalho do colaborador -->
+<div class="card bg-white border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-4">
+            <!-- Avatar inicial -->
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-3 text-white"
+                 style="width:70px;height:70px;background:#1a2332;flex-shrink:0">
+                {{ (colaborador.nome_disp or 'X')[0] | upper }}
+            </div>
+            <div class="flex-grow-1">
+                <h5 class="mb-0 fw-bold">{{ colaborador.nome_disp }}</h5>
+                <div class="text-muted small">{{ colaborador.nome }}</div>
+                <div class="mt-1">
+                    <span class="badge bg-secondary me-1">Nº {{ colaborador.numero }}</span>
+                    <span class="badge bg-light text-dark border">{{ colaborador.departamento }}</span>
+                </div>
+            </div>
+            <div class="text-center">
+                <div class="fs-1 fw-bold
+                    {% if colaborador.pontos > 0 %}text-success
+                    {% elif colaborador.pontos < 0 %}text-danger
+                    {% else %}text-muted{% endif %}">
+                    {% if colaborador.pontos > 0 %}+{% endif %}{{ colaborador.pontos }}
+                </div>
+                <div class="text-muted small">pontos totais</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumo rápido -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card bg-white border-0 shadow-sm p-3 text-center">
+            <div class="fs-4 fw-bold text-success">+{{ resumo.positivos }}</div>
+            <div class="text-muted small">Pontos ganhos</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-white border-0 shadow-sm p-3 text-center">
+            <div class="fs-4 fw-bold text-danger">{{ resumo.negativos }}</div>
+            <div class="text-muted small">Pontos perdidos</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-white border-0 shadow-sm p-3 text-center">
+            <div class="fs-4 fw-bold text-secondary">{{ resumo.total_registos }}</div>
+            <div class="text-muted small">Dias registados</div>
+        </div>
+    </div>
+</div>
+
+<!-- Histórico de pontos -->
+<div class="card bg-white border-0 shadow-sm">
+    <div class="card-header bg-white border-bottom fw-bold py-3">
+        <i class="bi bi-clock-history"></i> Histórico de Pontos (últimos 30 registos)
+    </div>
+    <div class="card-body p-0">
+        <table class="table tabela-jogo mb-0">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Tarefa</th>
+                    <th>Observação</th>
+                    <th class="text-center">Pontos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in historico %}
+                <tr>
+                    <td>
+                        <small class="text-muted">
+                            {{ h.data.strftime('%d/%m/%Y %H:%M') if h.data else '—' }}
+                        </small>
+                    </td>
+                    <td><small>{{ h.tarefa }}</small></td>
+                    <td><small class="text-muted">{{ h.obs or '—' }}</small></td>
+                    <td class="text-center">
+                        <span class="badge rounded-pill px-3
+                            {% if h.pontos > 0 %}badge-pontos-pos
+                            {% elif h.pontos < 0 %}badge-pontos-neg
+                            {% else %}badge-pontos-zero{% endif %}">
+                            {% if h.pontos > 0 %}+{% endif %}{{ h.pontos }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        Sem registos. Reprocessa um intervalo de datas primeiro.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

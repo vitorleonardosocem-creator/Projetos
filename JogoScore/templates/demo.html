@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🏆 JogoScore SOCEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .leader-card { transition: all 0.3s; }
+        .leader-card:hover { transform: scale(1.02); }
+        .top1-badge { background: linear-gradient(45deg, gold, orange); box-shadow: 0 20px 40px rgba(255,215,0,0.3); }
+        .badge-sinex   { background: #dbeafe; color: #1d4ed8; }
+        .badge-idonics { background: #dcfce7; color: #15803d; }
+        .badge-ambos   { background: #fdf4ff; color: #7e22ce; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100">
+
+{% include '_sidebar.html' %}
+
+<div class="ws-content p-6">
+    <div class="text-center mb-8 pt-8">
+        <h1 class="text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+            JogoScore SOCEM
+        </h1>
+        <div class="flex justify-center gap-6 text-base text-gray-600 mb-4">
+            <span>👥 Total: <strong class="text-indigo-600">{{ total_users }}</strong></span>
+            <span>🔧 SINEX: <strong class="text-blue-600">{{ total_sinex }}</strong></span>
+            <span>🕐 IDOntime: <strong class="text-green-600">{{ total_idonics }}</strong></span>
+        </div>
+        {% if top1 %}
+        <p class="text-lg text-green-600">🥇 Líder: <strong>{{ top1.nome }}</strong> ({{ top1.pontos_total }} pts)</p>
+        {% endif %}
+    </div>
+
+    {% if top1 %}
+    <div class="max-w-4xl mx-auto mb-12">
+        <div class="bg-white rounded-3xl shadow-2xl p-10 text-center top1-badge leader-card">
+            <div class="text-7xl mb-6">🥇</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-3">{{ top1.nome }}</h2>
+            <div class="flex justify-center gap-4 text-lg mb-4">
+                <span class="bg-indigo-100 px-4 py-2 rounded-xl text-indigo-700">{{ top1.departamento }}</span>
+                {% if top1.equipa and top1.equipa != 'Sem Equipa' and top1.equipa != '—' %}
+                <span class="bg-green-100 px-4 py-2 rounded-xl text-green-700">{{ top1.equipa }}</span>
+                {% endif %}
+            </div>
+            {% if top1.pontos_sinex > 0 and top1.pontos_idonics > 0 %}
+            <div class="text-sm text-gray-600 mb-2">
+                SINEX: {{ top1.pontos_sinex }} pts + IDOntime: {{ top1.pontos_idonics }} pts
+            </div>
+            {% endif %}
+            <div class="text-5xl font-bold text-yellow-500">🏆 {{ top1.pontos_total }} pts</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- LEADERBOARD -->
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-4xl font-bold text-center mb-10 text-gray-800">🏆 Leaderboard</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for user in leaderboard %}
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 leader-card hover:shadow-2xl border border-white/50">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="text-2xl font-black text-gray-700 px-3 py-1 bg-gray-100 rounded-lg">
+                        #{{ user.posicao }}
+                    </div>
+                    <div class="text-2xl">
+                        {% if user.posicao == 1 %}🥇{% elif user.posicao == 2 %}🥈{% elif user.posicao == 3 %}🥉{% else %}🏅{% endif %}
+                    </div>
+                </div>
+
+                <h3 class="text-lg font-bold text-gray-800 mb-2 truncate">{{ user.nome }}</h3>
+
+                <p class="text-sm text-gray-500 mb-1 truncate">🏢 {{ user.departamento }}</p>
+                {% if user.equipa and user.equipa != 'Sem Equipa' and user.equipa != '—' %}
+                <p class="text-sm text-green-600 mb-2 truncate">👥 {{ user.equipa }}</p>
+                {% endif %}
+
+                <!-- Badge de origem -->
+                <div class="mb-3">
+                    {% if user.pontos_sinex > 0 and user.pontos_idonics > 0 %}
+                    <span class="text-xs px-2 py-1 rounded-full badge-ambos font-semibold">⚡ SINEX + IDOntime</span>
+                    {% elif user.fonte == 'sinex' %}
+                    <span class="text-xs px-2 py-1 rounded-full badge-sinex font-semibold">🔧 SINEX</span>
+                    {% else %}
+                    <span class="text-xs px-2 py-1 rounded-full badge-idonics font-semibold">🕐 IDOntime</span>
+                    {% endif %}
+                </div>
+
+                <!-- Pontos detalhados se tiver ambos -->
+                {% if user.pontos_sinex > 0 and user.pontos_idonics > 0 %}
+                <div class="text-xs text-gray-400 mb-2">
+                    {{ user.pontos_sinex }} + {{ user.pontos_idonics }} pts
+                </div>
+                {% endif %}
+
+                <div class="flex items-center justify-between mt-2">
+                    <div class="text-2xl font-black
+                        {% if user.pontos_total >= 0 %}text-green-600{% else %}text-red-500{% endif %}">
+                        {{ user.pontos_total }} pts
+                    </div>
+                    {% if user.id %}
+                    <a href="/colaborador/{{ user.id }}"
+                       class="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition font-semibold">
+                        Ver →
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-full text-center py-12">
+                <div class="text-6xl mb-4">🚀</div>
+                <h3 class="text-2xl font-bold text-gray-600 mb-2">Ainda sem jogadores!</h3>
+                <p class="text-lg text-gray-500">Adiciona colaboradores ou sincroniza o IDOntime.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+setInterval(() => {
+    fetch('/leaderboard-json')
+        .then(r => r.json())
+        .then(data => { if (data.length > 0) console.log('🏆 Leaderboard atualizado:', data.slice(0,3)); })
+        .catch(e => console.error('Refresh falhou:', e));
+}, 30000);
+</script>
+</body>
+</html>

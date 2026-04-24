@@ -1,0 +1,111 @@
+<style>
+/* ─── JogoScore Sidebar ──────────────────────────────── */
+.ws-sidebar {
+    position: fixed; left: 0; top: 0;
+    height: 100vh; width: 260px;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    z-index: 1000;
+    display: flex; flex-direction: column;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.35);
+    overflow-y: auto;
+}
+.ws-logo {
+    padding: 1.4rem 1.2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    text-align: center; flex-shrink: 0;
+}
+.ws-logo-title {
+    font-size: 1.15rem; font-weight: 800; margin: 0 0 0.35rem;
+    background: linear-gradient(90deg, #818cf8, #c084fc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; letter-spacing: 0.02em;
+}
+.ws-user-badge {
+    font-size: 0.72rem; color: rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.07);
+    padding: 0.2rem 0.7rem; border-radius: 20px;
+    display: inline-block; max-width: 200px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ws-section-label {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.28); text-transform: uppercase;
+    padding: 0.9rem 1.4rem 0.25rem; flex-shrink: 0;
+}
+.ws-menu-item {
+    display: block; padding: 0.65rem 1.4rem; cursor: pointer;
+    color: rgba(255,255,255,0.72); transition: all 0.18s ease;
+    border-left: 3px solid transparent; font-size: 0.875rem;
+    text-decoration: none; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+}
+.ws-menu-item:hover {
+    background: rgba(129,140,248,0.15); border-left-color: #818cf8;
+    color: #e0e7ff; padding-left: 1.7rem;
+}
+.ws-menu-item.ws-active {
+    background: rgba(129,140,248,0.2); border-left-color: #818cf8;
+    color: #e0e7ff; font-weight: 600;
+}
+.ws-menu-item.ws-danger { color: rgba(252,165,165,0.75); }
+.ws-menu-item.ws-danger:hover {
+    background: rgba(239,68,68,0.12); border-left-color: #f87171; color: #fca5a5;
+}
+.ws-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 0.4rem 0; flex-shrink: 0; }
+.ws-spacer { flex: 1; min-height: 1rem; }
+.ws-content { margin-left: 260px; min-height: 100vh; }
+@media (max-width: 768px) {
+    .ws-sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; }
+    .ws-content { margin-left: 0; }
+    .ws-menu-item { padding: 0.6rem 0.9rem; font-size: 0.8rem; }
+    .ws-section-label { display: none; }
+    .ws-spacer { display: none; }
+}
+</style>
+
+<div class="ws-sidebar">
+    <div class="ws-logo">
+        <div class="ws-logo-title">🏆 JogoScore SOCEM</div>
+        {% if request.state.user %}
+        <span class="ws-user-badge">{{ request.state.user.username }}</span>
+        {% endif %}
+    </div>
+
+    <div class="ws-section-label">Geral</div>
+    {% if request.state.user and request.state.user.tipo == 'user' %}
+    <a class="ws-menu-item" href="/minha-area">👤 Minha Área</a>
+    {% else %}
+    <a class="ws-menu-item" href="/">🏠 Dashboard</a>
+    {% endif %}
+    <a class="ws-menu-item" href="/departamentos">🏢 Departamentos</a>
+    <a class="ws-menu-item" href="/loja">🛍️ Loja de Pontos</a>
+    <a class="ws-menu-item" href="/historico">📜 Histórico Anual</a>
+    <a class="ws-menu-item" href="/tv" target="_blank">📺 Ecrã TV</a>
+
+    {% if request.state.user and request.state.user.tipo == 'admin' %}
+    <hr class="ws-divider">
+    <div class="ws-section-label">Pontuações</div>
+    <a class="ws-menu-item" href="/admin/pontuacao-sinex">📊 Pontuação SINEX</a>
+    <a class="ws-menu-item" href="/admin/pontuacao-idontime">📊 Pontuação IDOntime</a>
+
+    <hr class="ws-divider">
+    <div class="ws-section-label">Reprocessar</div>
+    <a class="ws-menu-item" href="/admin/reprocessar/sinex">🔄 Reprocessar SINEX</a>
+    <a class="ws-menu-item" href="/admin/reprocessar/idontime">🔄 Reprocessar IDOntime</a>
+
+    <hr class="ws-divider">
+    <div class="ws-section-label">Administração</div>
+    <a class="ws-menu-item" href="/admin/contas">👥 Contas / Login</a>
+    <a class="ws-menu-item" href="/admin-users">👤 Colaboradores SINEX</a>
+    <a class="ws-menu-item" href="/admin-colaboradores-idontime">🕐 Colaboradores IDOntime</a>
+    <a class="ws-menu-item" href="/admin-departamentos">🏢 Departamentos SINEX</a>
+    <a class="ws-menu-item" href="/admin-equipas">🏭 Equipas</a>
+    <a class="ws-menu-item" href="/admin-pontos">⭐ Atribuir Pontos</a>
+    <a class="ws-menu-item" href="/admin/loja">⚙️ Admin Loja</a>
+    <a class="ws-menu-item" href="/admin/relatorio">📈 Relatório Mensal</a>
+    {% endif %}
+
+    <div class="ws-spacer"></div>
+    <hr class="ws-divider">
+    <a class="ws-menu-item ws-danger" href="/logout">🚪 Sair</a>
+</div>
